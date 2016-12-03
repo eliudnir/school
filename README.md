@@ -1,0 +1,3 @@
+# school
+
+Courses, assignments, this and that ...
