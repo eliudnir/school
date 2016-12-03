@@ -1,0 +1,815 @@
+Script started on Mon 30 Nov 2015 10:24:59 AM PST
+[thagen@hills asmt03]$ cat head3
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sat Nov. 21 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			head[n]
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+#		Restrictions: 				No getopts, that is cheating...
+
+# First we store a standard usage error output to a varible
+usageerror="usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)"
+
+# a matching expression we'll use to make sure second argument (if -p is given)
+# is a number (positive integer) in the user input 
+matchnum='^[0-9]+$'
+
+# here we set up some default values that we will override if the user supplies
+# valid arguments when running the program
+inputfile=""
+linestoprint=10
+linenumbers=false
+reverselines=false
+
+# a counter variable and an array to hold our arguments, plus another var for 
+# the number of arguments supplied (number)
+arrindex=0
+argarray=[]
+
+# Give usage error output if we get no arguments or more than 4 (max possible)
+if [ $# -le 0 ] || [ $# -gt 5 ]
+then
+  echo "$usageerror"
+  exit 1
+fi
+
+# Here we read all the user supplied arguments into an array and count the
+# number arguments so we can index when we add to the array :)
+for arg in "$@"
+do 
+	argarray[arrindex]=$arg
+	((arrindex += 1))
+done
+
+# Then we set up a while loop that tests for the "size" of the array we built up
+# above. If the size is not equal to 0 (empty) we keep looping. This is sort of 
+# disingenuous as the last loop instruction is to error out and exit.
+# This is because before the error/exit instruction we will "catch" good/valid
+# inputs in the array and "consume" them (taking advantage of 1 inputfile only) 
+# thereby reducing the array size, and then use the continue keyweord to start 
+# the loop again. This way, if an input in the array is not valid we are guaranteed 
+# to quit here. 
+# *I believe this will accept arguments in any order as well as long as they are 
+# valid arguments to begin with. 
+while [[ ${#argarray[@]} -ne 0 ]] ;
+do
+
+	# Here we catch and process VALID arguments
+	# enable linenumbers if -c is present
+	# then we redefine argarray from the subindex 1 positon and on (remove first element)
+	if [[ ${argarray[0]} = "-c" ]] ; 
+	then
+		linenumbers=true
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# Test and capture the -r option if it is given
+	if [[ ${argarray[0]} = "-r" ]] ; 
+	then
+		reverselines=true
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# Test to see if -p is set and followed by an integer
+	# update linestoprint if -p and a valid integer is set as argument
+	# then we redefine argarray from the subindex 2 positon and on (remove first two elements)
+	if [[ ${argarray[0]} = "-p" ]] && [[ ${argarray[1]} =~ $matchnum ]] ; 
+	then
+		linestoprint=${argarray[1]}
+		argarray=("${argarray[@]:2}")
+		continue
+	fi
+
+	# update inputfile variable if the argument exists and can be read 
+	# then we redefine argarray from the subindex 1 positon and on (remove first element)
+	if [[ -e ${argarray[0]} ]] && [[ -r ${argarray[0]} ]] ;
+	then
+		inputfile=${argarray[0]}
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# if our loop ever get's here we have bad arguments and need to error/exit
+	echo "$usageerror"
+	exit 1
+done
+
+# and finally we just need to exit/error if our inputfile variable wasn't set
+# in the loop (edge case with 1 argument that is valid but no inputfile supplied)
+if ! [[ -e $inputfile ]] && ! [[ -r $inputfile ]] ;
+then
+	echo "$usageerror"
+	exit 1
+fi
+
+# variable to hold the line number we're printing, initialized to 1
+# and a cache array to hold our lines before we figure out if we are to 
+# reverse them or not
+lnnumber=1
+linescache=[]
+
+# our print loop to get the (valid) input file printed out line by line with 
+# the above configuration set
+while read line || [[ -n $line ]] ; 
+do
+
+	# Break out of the loop if we have printed the specified (or default 10)
+	# number of lines, we decrease this at the end of the while loop and 
+	# test at entry for this breaking condition
+	if [[ $linestoprint -lt 1 ]]
+	then
+		break;
+	fi
+	
+	# If our configuration set the linenumbers flag we branch and follow said 
+	# instruction here - here we sneak in a tab between lnnnumber and line
+	if [[ "$linenumbers" = true ]] ; 
+	then
+		linescache[((lnnumber - 1))]="$lnnumber"$'\t'"$line"
+
+	# else print default without preceeding linenumbers
+	else
+		linescache[((lnnumber - 1))]="$line"
+	fi
+	
+	# Then we increase the lnnumber variable by one per pass and decrease 
+	# linestoprint by one per pass to keep everything neat (per config)
+	((lnnumber += 1))
+	((linestoprint -= 1))
+
+done < $inputfile
+
+# Then finally we print out the array based on the config we got at the
+# argument line supplied by the user, either in reverse or normal
+# this would be the reverse part
+if [[ "$reverselines" = true ]] ; 
+then
+	for (( i = ${#linescache[@]}; i; )) ; 
+	do
+    echo "${linescache[((i - 1))]}"
+    (( i -= 1 ))
+  done
+
+#	This would be the "normal" part
+else
+	for i in "${linescache[@]}"
+	do
+		echo "$i"
+	done 
+fi[thagen@hills asmt03]$ cat somefile.txt
+this 
+test
+is 
+
+here 
+
+
+as
+
+and it will be
+an example files
+beh b
+
+
+yeh[thagen@hills asmt03]$ cat somefile2.txt
+lineA
+lineBB
+lineC
+
+LineD[thagen@hills asmt03]$ ./head3
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -c
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -c  somefile.txt
+this
+test
+is
+
+here
+
+
+as
+
+and it will be
+[thagen@hills asmt03]$ ./head3 somefile.txt[thagen@hills asmt03]$ ./head3  somefile.txt- somefile.txtp somefile.txt[thagen@hills asmt03]$ ./head3 -p  somefile.txt1 somefile.txt0 somefile.txt somefile.txt  somefile.txt 6 somefile.txt
+this
+test
+is
+
+here
+
+[thagen@hills asmt03]$ ./head3 -p 6 somefile.txt[thagen@hills asmt03]$ ./head3 -p 6  somefile.txt- somefile.txtc somefile.txt
+1	this
+2	test
+3	is
+4	
+5	here
+6	
+[thagen@hills asmt03]$ ./head3 -p 6 -c somefile.txt[thagen@hills asmt03]$ ./head3 -p 6 -c [thagen@hills asmt03]$ ./head3 -p 6 -c s[thagen@hills asmt03]$ ./head3 -p 6 -c so[thagen@hills asmt03]$ ./head3 -p 6 -c som[thagen@hills asmt03]$ ./head3 -p 6 -c some[thagen@hills asmt03]$ ./head3 -p 6 -c somef[thagen@hills asmt03]$ ./head3 -p 6 -c somefi[thagen@hills asmt03]$ ./head3 -p 6 -c somefil[thagen@hills asmt03]$ ./head3 -p 6 -c somefile2.txt
+1	lineA
+2	lineBB
+3	lineC
+4	
+5	LineD
+[thagen@hills asmt03]$ ./head3 -p 6 -c somefile2.txt -c somefile2.txt 3 -c somefile2.txt
+1	lineA
+2	lineBB
+3	lineC
+[thagen@hills asmt03]$ ./head3 -p 3 -c somefile2.txt somefile2.txt- somefile2.txtr somefile2.txt
+3	lineC
+2	lineBB
+1	lineA
+[thagen@hills asmt03]$ ./head3 -p 3 -c -r somefile2.txt.txt [thagen@hills asmt03]$ ./head3 -p [thagen@hills asmt03]$ ./head3 -p 3 -c -r somefile.txt 8 -c -r somefile.txt
+8	as
+7	
+6	
+5	here
+4	
+3	is
+2	test
+1	this
+[thagen@hills asmt03]$ ./head3 -p 8 -c -r somefile.txt[thagen@hills asmt03]$ ./head3 -p 8 -c -r somefile.txt -r somefile.txt r somefile.txt -r somefile.txt -r somefile.txt -r somefile.txt -r somefile.txt r somefile.txt 
+and it will be
+
+as
+
+
+here
+
+is
+test
+this
+[thagen@hills asmt03]$ ./head3 -r somefile.txt -c
+10	and it will be
+9	
+8	as
+7	
+6	
+5	here
+4	
+3	is
+2	test
+1	this
+[thagen@hills asmt03]$ ./head3 -r somefile.txt -c p 4
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -r somefile.txt -c p 4[thagen@hills asmt03]$ ./head3 -r somefile.txt -c -p 4
+4	
+3	is
+2	test
+1	this
+[thagen@hills asmt03]$ ./head3 -r somefile.txt -c -p 4[thagen@hills asmt03]$ ./head3 -r som[thagen@hills asmt03]$ ./head3 -r some[thagen@hills asmt03]$ ./head3 -r somef[thagen@hills asmt03]$ ./head3 -r somefi[thagen@hills asmt03]$ ./head3 -r somefil[thagen@hills asmt03]$ ./head3 -r somefile[thagen@hills asmt03]$ ./head3 -r somefile.[thagen@hills asmt03]$ ./head3 -r somefile.t[thagen@hills asmt03]$ ./head3 -r somefile.tx[thagen@hills asmt03]$ ./head3 -r somefile.txt[thagen@hills asmt03]$ ./head3 -r somefile.txt -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 -c -p 4 
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ head    ./head3 -p 15 somefile2.txt
+lineA
+lineBB
+lineC
+
+LineD
+[thagen@hills asmt03]$ ./head3 -p 15 somefile2.txt -[thagen@hills asmt03]$ ./head3 -p 15 somefile2.txt -c
+1	lineA
+2	lineBB
+3	lineC
+4	
+5	LineD
+[thagen@hills asmt03]$ ./head3 -p 15 somefile2.txt -c somefile2.txt -c  somefile2.txt -c 4 somefile2.txt -c
+1	lineA
+2	lineBB
+3	lineC
+4	
+[thagen@hills asmt03]$ ./head3 -p 4 somefile2.txt -c -4 r
+4	
+3	lineC
+2	lineBB
+1	lineA
+[thagen@hills asmt03]$ ./head3 -p 4 somefile2.txt -c -r                       4
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -4 c
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -c r
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ./head3 -r q somefile.txt
+usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)
+[thagen@hills asmt03]$ ls
+asmt03.txt  head3  log.prompt2.txt  prompt2  somefile2.txt  somefile.txt
+[thagen@hills asmt03]$ cat prompt2
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Mon Nov. 23 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			prompt2
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+
+# First we set up some variables to hold information about our state (if we're to keep asking questions or not)
+# and an array to hold our inputs. We also declare the name of our logging file here
+keepgoing=true
+musicarray=()
+logfile="log.prompt2.txt"
+
+# Colors 
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+ORANGE='\033[0;33m'
+NC='\033[0m'
+
+# If the logfile exists but we can't write to it, error and exit as 
+# something is wrong
+if [[ -e "$logfile" ]] && ! [[ -w "$logfile" ]] ; 
+then
+	echo -e "ERROR: Logfile for program exists but can't write to it!"
+	exit 1
+fi
+
+# if the logfile doesn't exist we have to make it somehow, touch 
+# takes care of that for us 
+if ! [[ -e "$logfile" ]] ; 
+then
+	touch "$logfile"
+fi
+
+# Once we make sure that the logfile can be written to we write some log entries indicating
+# that the program started, when it started and who ran it on the system
+echo -e "`date -I`||`date +%T`||'`whoami`'\t ** Script started **\t`date`" >> "$logfile"
+echo -e "`date -I`||`date +%T`||'`whoami`'\t ** By user **\t`whoami`" >> "$logfile"
+echo -e "`date -I`||`date +%T`||'`whoami`'\t ** Starting session log **" >> "$logfile"
+
+# Here we just keep rocking until we decide at some point to change $keepgoing to false
+while [[ "$keepgoing" = true ]] ; 
+do
+
+	# Then we present the user with the choices 
+	# and read it in, then log that choice to the $logfile using >> to append
+	echo -e "What kind of music do you listen to?"
+	echo -e "(folk, electronic, blues, jazz, classical, rock or ${RED}quit${NC})"
+	read choice
+	echo -e "`date -I`||`date +%T`||'`whoami`'\t -- user raw input: $choice" >> "$logfile"
+
+	# Then we handle the user choice with a case list as here 
+	# Each input will be logged once to the musicarray, and also >> appended to the logfile
+	case $choice in
+
+		"folk"|"f" )
+			echo -e "${BLUE}How many folk singers does it take to change a light bulb?${NC}\n${GREEN}Three. One to change it and two to sing about how great the old one was.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'folk'" >> "$logfile"
+			;;
+
+		"electronic"|"e" )
+			echo -e "${ORANGE}It used to be called modem noise, now it's called Skrillex.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'electronic'" >> "$logfile"
+			;;
+
+		"blues"|"b" )
+			echo -e "${BLUE}If it doesn't open with 'I woke up this morning...', start over...${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'blues'" >> "$logfile"
+			;;
+
+		"jazz"|"j" )
+			echo -e "${CYAN}How does a Jazz musician end up with a million dollars?${NC}\n${GREEN}By starting out with two million dollars.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'jazz'" >> "$logfile"
+			;;
+
+		"classical"|"c" )
+			echo -e "${BLUE}Why couldn't the string quartet find their composer?${NC}\n${GREEN}He was Haydn.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'classical'" >> "$logfile"
+			;;
+
+		"rock"|"r" )
+			echo -e "${CYAN}What does a lead guitarist use for contraception?${NC}\n${GREEN}His personality.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ++ which maps to 'rock'" >> "$logfile"
+			;;
+
+		# if this option is selected in the case we flip our boolean switch to false and end it here
+		# making sure to log that as well
+		"quit"|"q" )
+			echo -e "OK quitting."
+			echo -e "`date -I`||`date +%T`||'`whoami`'\t ** Script ended **\t`date`" >> "$logfile"
+			keepgoing=false
+			;;
+	esac
+
+done
+
+# Then we simply output the matches the user did while the program ran (not log)
+echo -e "You matched the following words while the program ran:"
+echo -e "${musicarray[*]}"[thagen@hills asmt03]$ cat log.prompt2.txt 
+2015-11-30||10:21:35||'thagen'	 ** Script started **	Mon Nov 30 10:21:35 PST 2015
+2015-11-30||10:21:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:21:35||'thagen'	 ** Starting session log **
+2015-11-30||10:21:37||'thagen'	 -- user raw input: quit
+2015-11-30||10:21:37||'thagen'	 ** Script ended **	Mon Nov 30 10:21:37 PST 2015
+[thagen@hills asmt03]$ ./lo  prompt2
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+e
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+classical
+[0;34mWhy couldn't the string quartet find their composer?[0m
+[0;32mHe was Haydn.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+folky
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+electronic
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+rock
+[0;36mWhat does a lead guitarist use for contraception?[0m
+[0;32mHis personality.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+blues
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+quit
+OK quitting.
+You matched the following words while the program ran:
+e classical electronic rock blues 
+[thagen@hills asmt03]$ cat log.prompt2.txt 
+2015-11-30||10:21:35||'thagen'	 ** Script started **	Mon Nov 30 10:21:35 PST 2015
+2015-11-30||10:21:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:21:35||'thagen'	 ** Starting session log **
+2015-11-30||10:21:37||'thagen'	 -- user raw input: quit
+2015-11-30||10:21:37||'thagen'	 ** Script ended **	Mon Nov 30 10:21:37 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** Script started **	Mon Nov 30 10:30:35 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:30:35||'thagen'	 ** Starting session log **
+2015-11-30||10:30:41||'thagen'	 -- user raw input: e
+2015-11-30||10:30:41||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:30:54||'thagen'	 -- user raw input: classical
+2015-11-30||10:30:54||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:01||'thagen'	 -- user raw input: folky
+2015-11-30||10:31:05||'thagen'	 -- user raw input: electronic
+2015-11-30||10:31:05||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:08||'thagen'	 -- user raw input: rock
+2015-11-30||10:31:08||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:09||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:09||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:10||'thagen'	 -- user raw input: quit
+2015-11-30||10:31:10||'thagen'	 ** Script ended **	Mon Nov 30 10:31:10 PST 2015
+[thagen@hills asmt03]$ ./prompt2
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+r
+[0;36mWhat does a lead guitarist use for contraception?[0m
+[0;32mHis personality.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+r
+[0;36mWhat does a lead guitarist use for contraception?[0m
+[0;32mHis personality.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+r
+[0;36mWhat does a lead guitarist use for contraception?[0m
+[0;32mHis personality.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+c
+[0;34mWhy couldn't the string quartet find their composer?[0m
+[0;32mHe was Haydn.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+classical
+[0;34mWhy couldn't the string quartet find their composer?[0m
+[0;32mHe was Haydn.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+jazz
+[0;36mHow does a Jazz musician end up with a million dollars?[0m
+[0;32mBy starting out with two million dollars.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+jayzz
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+blues
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+blues
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+b
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+b
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+folk
+[0;34mHow many folk singers does it take to change a light bulb?[0m
+[0;32mThree. One to change it and two to sing about how great the old one was.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+trurck
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+rocknrolla
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+e
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+e
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+q
+OK quitting.
+You matched the following words while the program ran:
+r r r c classical jazz blues blues b b folk e e 
+[thagen@hills asmt03]$ cat log.prompt2.txt 
+2015-11-30||10:21:35||'thagen'	 ** Script started **	Mon Nov 30 10:21:35 PST 2015
+2015-11-30||10:21:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:21:35||'thagen'	 ** Starting session log **
+2015-11-30||10:21:37||'thagen'	 -- user raw input: quit
+2015-11-30||10:21:37||'thagen'	 ** Script ended **	Mon Nov 30 10:21:37 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** Script started **	Mon Nov 30 10:30:35 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:30:35||'thagen'	 ** Starting session log **
+2015-11-30||10:30:41||'thagen'	 -- user raw input: e
+2015-11-30||10:30:41||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:30:54||'thagen'	 -- user raw input: classical
+2015-11-30||10:30:54||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:01||'thagen'	 -- user raw input: folky
+2015-11-30||10:31:05||'thagen'	 -- user raw input: electronic
+2015-11-30||10:31:05||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:08||'thagen'	 -- user raw input: rock
+2015-11-30||10:31:08||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:09||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:09||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:10||'thagen'	 -- user raw input: quit
+2015-11-30||10:31:10||'thagen'	 ** Script ended **	Mon Nov 30 10:31:10 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** Script started **	Mon Nov 30 10:31:28 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** By user **	thagen
+2015-11-30||10:31:28||'thagen'	 ** Starting session log **
+2015-11-30||10:31:30||'thagen'	 -- user raw input: r
+2015-11-30||10:31:30||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:32||'thagen'	 -- user raw input: c
+2015-11-30||10:31:32||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:34||'thagen'	 -- user raw input: classical
+2015-11-30||10:31:34||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:35||'thagen'	 -- user raw input: jazz
+2015-11-30||10:31:35||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:31:37||'thagen'	 -- user raw input: jayzz
+2015-11-30||10:31:39||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:39||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:43||'thagen'	 -- user raw input: folk
+2015-11-30||10:31:43||'thagen'	 ++ which maps to 'folk'
+2015-11-30||10:31:46||'thagen'	 -- user raw input: trurck
+2015-11-30||10:31:51||'thagen'	 -- user raw input: rocknrolla
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:57||'thagen'	 -- user raw input: q
+2015-11-30||10:31:57||'thagen'	 ** Script ended **	Mon Nov 30 10:31:57 PST 2015
+[thagen@hills asmt03]$ cat log.prompt2.txt ./prompt2           
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+smirk
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+pork
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+chops
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+jazz
+[0;36mHow does a Jazz musician end up with a million dollars?[0m
+[0;32mBy starting out with two million dollars.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+j
+[0;36mHow does a Jazz musician end up with a million dollars?[0m
+[0;32mBy starting out with two million dollars.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+j
+[0;36mHow does a Jazz musician end up with a million dollars?[0m
+[0;32mBy starting out with two million dollars.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+blues
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+b
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+b
+[0;34mIf it doesn't open with 'I woke up this morning...', start over...[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+electronic
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+e
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+e
+[0;33mIt used to be called modem noise, now it's called Skrillex.[0m
+
+What kind of music do you listen to?
+(folk, electronic, blues, jazz, classical, rock or [0;31mquit[0m)
+q
+OK quitting.
+You matched the following words while the program ran:
+jazz j j blues b b electronic e e 
+[thagen@hills asmt03]$ cat log.prompt2.txt 
+2015-11-30||10:21:35||'thagen'	 ** Script started **	Mon Nov 30 10:21:35 PST 2015
+2015-11-30||10:21:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:21:35||'thagen'	 ** Starting session log **
+2015-11-30||10:21:37||'thagen'	 -- user raw input: quit
+2015-11-30||10:21:37||'thagen'	 ** Script ended **	Mon Nov 30 10:21:37 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** Script started **	Mon Nov 30 10:30:35 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:30:35||'thagen'	 ** Starting session log **
+2015-11-30||10:30:41||'thagen'	 -- user raw input: e
+2015-11-30||10:30:41||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:30:54||'thagen'	 -- user raw input: classical
+2015-11-30||10:30:54||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:01||'thagen'	 -- user raw input: folky
+2015-11-30||10:31:05||'thagen'	 -- user raw input: electronic
+2015-11-30||10:31:05||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:08||'thagen'	 -- user raw input: rock
+2015-11-30||10:31:08||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:09||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:09||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:10||'thagen'	 -- user raw input: quit
+2015-11-30||10:31:10||'thagen'	 ** Script ended **	Mon Nov 30 10:31:10 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** Script started **	Mon Nov 30 10:31:28 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** By user **	thagen
+2015-11-30||10:31:28||'thagen'	 ** Starting session log **
+2015-11-30||10:31:30||'thagen'	 -- user raw input: r
+2015-11-30||10:31:30||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:32||'thagen'	 -- user raw input: c
+2015-11-30||10:31:32||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:34||'thagen'	 -- user raw input: classical
+2015-11-30||10:31:34||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:35||'thagen'	 -- user raw input: jazz
+2015-11-30||10:31:35||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:31:37||'thagen'	 -- user raw input: jayzz
+2015-11-30||10:31:39||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:39||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:43||'thagen'	 -- user raw input: folk
+2015-11-30||10:31:43||'thagen'	 ++ which maps to 'folk'
+2015-11-30||10:31:46||'thagen'	 -- user raw input: trurck
+2015-11-30||10:31:51||'thagen'	 -- user raw input: rocknrolla
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:57||'thagen'	 -- user raw input: q
+2015-11-30||10:31:57||'thagen'	 ** Script ended **	Mon Nov 30 10:31:57 PST 2015
+2015-11-30||10:34:06||'thagen'	 ** Script started **	Mon Nov 30 10:34:06 PST 2015
+2015-11-30||10:34:06||'thagen'	 ** By user **	thagen
+2015-11-30||10:34:06||'thagen'	 ** Starting session log **
+2015-11-30||10:34:12||'thagen'	 -- user raw input: smirk
+2015-11-30||10:34:14||'thagen'	 -- user raw input: pork
+2015-11-30||10:34:17||'thagen'	 -- user raw input: chops
+2015-11-30||10:34:19||'thagen'	 -- user raw input: jazz
+2015-11-30||10:34:19||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:20||'thagen'	 -- user raw input: j
+2015-11-30||10:34:20||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:20||'thagen'	 -- user raw input: j
+2015-11-30||10:34:20||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:21||'thagen'	 -- user raw input: blues
+2015-11-30||10:34:21||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:22||'thagen'	 -- user raw input: b
+2015-11-30||10:34:22||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:23||'thagen'	 -- user raw input: b
+2015-11-30||10:34:23||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:25||'thagen'	 -- user raw input: electronic
+2015-11-30||10:34:25||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:26||'thagen'	 -- user raw input: e
+2015-11-30||10:34:26||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:26||'thagen'	 -- user raw input: e
+2015-11-30||10:34:26||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:27||'thagen'	 -- user raw input: q
+2015-11-30||10:34:27||'thagen'	 ** Script ended **	Mon Nov 30 10:34:27 PST 2015
+[thagen@hills asmt03]$ w exs it
+exit
+
+Script done on Mon 30 Nov 2015 10:34:36 AM PST

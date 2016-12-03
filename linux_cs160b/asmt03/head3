@@ -1,0 +1,169 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sat Nov. 21 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			head[n]
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+#		Restrictions: 				No getopts, that is cheating...
+
+# First we store a standard usage error output to a varible
+usageerror="usage: head3 [-c] | [-p limit] | [-r] | <inputfile>
+[-p limit]: prints first 'limit' (a number) lines of file (optional)
+[-c]: prints line numbers preceeding all output lines (optional)
+[-r]: reverse output lines from inputfile (optional)
+<inputfile>: the input file to to print out (mandatory)"
+
+# a matching expression we'll use to make sure second argument (if -p is given)
+# is a number (positive integer) in the user input 
+matchnum='^[0-9]+$'
+
+# here we set up some default values that we will override if the user supplies
+# valid arguments when running the program
+inputfile=""
+linestoprint=10
+linenumbers=false
+reverselines=false
+
+# a counter variable and an array to hold our arguments, plus another var for 
+# the number of arguments supplied (number)
+arrindex=0
+argarray=[]
+
+# Give usage error output if we get no arguments or more than 4 (max possible)
+if [ $# -le 0 ] || [ $# -gt 5 ]
+then
+  echo "$usageerror"
+  exit 1
+fi
+
+# Here we read all the user supplied arguments into an array and count the
+# number arguments so we can index when we add to the array :)
+for arg in "$@"
+do 
+	argarray[arrindex]=$arg
+	((arrindex += 1))
+done
+
+# Then we set up a while loop that tests for the "size" of the array we built up
+# above. If the size is not equal to 0 (empty) we keep looping. This is sort of 
+# disingenuous as the last loop instruction is to error out and exit.
+# This is because before the error/exit instruction we will "catch" good/valid
+# inputs in the array and "consume" them (taking advantage of 1 inputfile only) 
+# thereby reducing the array size, and then use the continue keyweord to start 
+# the loop again. This way, if an input in the array is not valid we are guaranteed 
+# to quit here. 
+# *I believe this will accept arguments in any order as well as long as they are 
+# valid arguments to begin with. 
+while [[ ${#argarray[@]} -ne 0 ]] ;
+do
+
+	# Here we catch and process VALID arguments
+	# enable linenumbers if -c is present
+	# then we redefine argarray from the subindex 1 positon and on (remove first element)
+	if [[ ${argarray[0]} = "-c" ]] ; 
+	then
+		linenumbers=true
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# Test and capture the -r option if it is given
+	if [[ ${argarray[0]} = "-r" ]] ; 
+	then
+		reverselines=true
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# Test to see if -p is set and followed by an integer
+	# update linestoprint if -p and a valid integer is set as argument
+	# then we redefine argarray from the subindex 2 positon and on (remove first two elements)
+	if [[ ${argarray[0]} = "-p" ]] && [[ ${argarray[1]} =~ $matchnum ]] ; 
+	then
+		linestoprint=${argarray[1]}
+		argarray=("${argarray[@]:2}")
+		continue
+	fi
+
+	# update inputfile variable if the argument exists and can be read 
+	# then we redefine argarray from the subindex 1 positon and on (remove first element)
+	if [[ -e ${argarray[0]} ]] && [[ -r ${argarray[0]} ]] ;
+	then
+		inputfile=${argarray[0]}
+		argarray=("${argarray[@]:1}")
+		continue
+	fi
+
+	# if our loop ever get's here we have bad arguments and need to error/exit
+	echo "$usageerror"
+	exit 1
+done
+
+# and finally we just need to exit/error if our inputfile variable wasn't set
+# in the loop (edge case with 1 argument that is valid but no inputfile supplied)
+if ! [[ -e $inputfile ]] && ! [[ -r $inputfile ]] ;
+then
+	echo "$usageerror"
+	exit 1
+fi
+
+# variable to hold the line number we're printing, initialized to 1
+# and a cache array to hold our lines before we figure out if we are to 
+# reverse them or not
+lnnumber=1
+linescache=[]
+
+# our print loop to get the (valid) input file printed out line by line with 
+# the above configuration set
+while read line || [[ -n $line ]] ; 
+do
+
+	# Break out of the loop if we have printed the specified (or default 10)
+	# number of lines, we decrease this at the end of the while loop and 
+	# test at entry for this breaking condition
+	if [[ $linestoprint -lt 1 ]]
+	then
+		break;
+	fi
+	
+	# If our configuration set the linenumbers flag we branch and follow said 
+	# instruction here - here we sneak in a tab between lnnnumber and line
+	if [[ "$linenumbers" = true ]] ; 
+	then
+		linescache[((lnnumber - 1))]="$lnnumber"$'\t'"$line"
+
+	# else print default without preceeding linenumbers
+	else
+		linescache[((lnnumber - 1))]="$line"
+	fi
+	
+	# Then we increase the lnnumber variable by one per pass and decrease 
+	# linestoprint by one per pass to keep everything neat (per config)
+	((lnnumber += 1))
+	((linestoprint -= 1))
+
+done < $inputfile
+
+# Then finally we print out the array based on the config we got at the
+# argument line supplied by the user, either in reverse or normal
+# this would be the reverse part
+if [[ "$reverselines" = true ]] ; 
+then
+	for (( i = ${#linescache[@]}; i; )) ; 
+	do
+    echo "${linescache[((i - 1))]}"
+    (( i -= 1 ))
+  done
+
+#	This would be the "normal" part
+else
+	for i in "${linescache[@]}"
+	do
+		echo "$i"
+	done 
+fi

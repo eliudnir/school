@@ -1,0 +1,268 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_bkorders
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-04-22
+     version(): 10.0.17-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select CU.cust_id, CU.cust_name_last, (
+  select count(OH.cust_id)
+  from a_bkorders.order_headers OH
+  where OH.cust_id = CU.cust_id
+) as "number of orders"
+from a_bkorders.customers CU
+where CU.cust_id <= 250000
+order by CU.cust_id
+--------------
+
++---------+----------------+------------------+
+| cust_id | cust_name_last | number of orders |
++---------+----------------+------------------+
+|  200368 | Blake          |                7 |
+|  202958 | Denver         |                0 |
+|  208950 | Adams          |                1 |
+|  211483 | Carroll        |                5 |
+|  212921 | Books on Tap   |               11 |
+|  217002 | Grieg          |                0 |
+|  217796 | Anders         |               11 |
+|  218709 | Bonnard        |               12 |
+|  221297 | Dodgson        |                9 |
+|  222477 | Rossetti       |               15 |
+|  224038 | Austin         |                5 |
+|  226275 | Dalrymple      |                0 |
+|  226656 | Randall        |                3 |
+|  227105 | Kafka          |               21 |
+|  228175 | Cardin         |                2 |
+|  228275 | Mikulski       |                0 |
+|  228352 | Edwards        |                0 |
+|  234138 | Keats          |                9 |
+|  234709 | Brahms         |                3 |
+|  239427 | Marksa         |               10 |
++---------+----------------+------------------+
+20 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select CU.cust_id, CU.cust_name_last
+from a_bkorders.customers CU
+where exists (
+  select 1
+  from a_bkorders.order_headers OHjan
+  where CU.cust_id = OHjan.cust_id
+  and extract(year from OHjan.order_date) = extract(year from current_date())
+  and extract(month from OHjan.order_date) = 1
+)
+and exists (
+  select 1
+  from a_bkorders.order_headers OHfeb
+  where CU.cust_id = OHfeb.cust_id
+  and extract(year from OHfeb.order_date) = extract(year from current_date())
+  and extract(month from OHfeb.order_date) = 2
+)
+and exists (
+  select 1
+  from a_bkorders.order_headers OHmar
+  where CU.cust_id = OHmar.cust_id
+  and extract(year from OHmar.order_date) = extract(year from current_date())
+  and extract(month from OHmar.order_date) = 3
+)
+order by CU.cust_id
+--------------
+
++---------+----------------+
+| cust_id | cust_name_last |
++---------+----------------+
+|  212921 | Books on Tap   |
+|  234138 | Keats          |
+|  272611 | Jarrett        |
++---------+----------------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select AU.author_name_first, AU.author_name_last, AU.author_id
+from a_bkinfo.authors AU
+where exists (
+  select BAUnum.author_id, count(BAUnum.book_id) as numbooks
+  from a_bkinfo.book_authors BAUnum
+  where BAUnum.author_id = AU.author_id
+  group by BAUnum.author_id
+  having numbooks > 1
+)
+and not exists (
+  select *
+  from a_bkinfo.book_authors BAUord
+  where BAUord.author_id = AU.author_id
+  and BAUord.book_id in (
+    select OD.book_id
+    from a_bkorders.order_details OD
+  )
+)
+order by AU.author_id
+--------------
+
++-------------------+------------------+-----------+
+| author_name_first | author_name_last | author_id |
++-------------------+------------------+-----------+
+| Willie            | Mammoth          | M3110     |
+| Pete              | Moss             | M4540     |
++-------------------+------------------+-----------+
+2 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select BO.book_id, BO.title
+from a_bkinfo.books BO
+where exists (
+  select BT.book_id, count(BT.topic_id) as numberinprog
+  from a_bkinfo.book_topics BT
+  where BT.topic_id in ("PGM", "VB", "NET", "ADO")
+  and BT.book_id = BO.book_id
+  group by BT.book_id
+  having numberinprog = 2
+)
+order by BO.book_id
+--------------
+
++---------+-------------------------------------------------+
+| book_id | title                                           |
++---------+-------------------------------------------------+
+|    1101 | Programming SQL Server with VB.NET              |
+|    1102 | Practical Standards for VB.NET                  |
+|    1278 | Beginning VB 2008 Databases                     |
+|    1279 | Data-Driven Services with Silverlight 2         |
+|    1670 | Applied .NET Framework Programming VB.NET       |
+|    1678 | Pro .NET 2.0 Windows Forms and Controls VB 2005 |
+|    1689 | Programming Visual Basic 2005: The Language     |
+|    1979 | Pro VB 2008 and the .NET 3.5 Platform           |
++---------+-------------------------------------------------+
+8 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select OH.order_date, OH.order_id, OH.cust_id, (
+  select CS.cust_name_last
+  from a_bkorders.customers CS
+  where OH.cust_id = CS.cust_id
+) as customer, (
+  select sum(ODq.quantity)
+  from a_bkorders.order_details ODq
+  where OH.order_id = ODq.order_id
+  group by ODq.order_id
+) as NumberBooks, (
+  select sum(ODp.order_price)
+  from a_bkorders.order_details ODp
+  where OH.order_id = ODp.order_id
+  group by ODp.order_id
+) as OrderCost
+from a_bkorders.order_headers OH
+where extract(year from OH.order_date) = extract(year from current_date()) -1
+and extract(quarter from OH.order_date) = 1
+order by OH.order_date
+--------------
+
++------------+----------+---------+-------------+-------------+-----------+
+| order_date | order_id | cust_id | customer    | NumberBooks | OrderCost |
++------------+----------+---------+-------------+-------------+-----------+
+| 2014-01-18 |     5555 |  221297 | Dodgson     |          12 |    133.99 |
+| 2014-01-20 |     5554 |  290298 | Swift       |        NULL |      NULL |
+| 2014-01-22 |     5561 |  222477 | Rossetti    |           7 |    120.90 |
+| 2014-01-25 |    52900 |  226656 | Randall     |         145 |     55.00 |
+| 2014-01-26 |    52901 |  259906 | Capybara    |          50 |     49.00 |
+| 2014-01-28 |     5562 |  267780 | Shelly      |           8 |    159.90 |
+| 2014-02-12 |    41811 |  221297 | Dodgson     |           6 |     92.08 |
+| 2014-02-12 |    18142 |  227105 | Kafka       |           1 |     26.99 |
+| 2014-02-12 |    41812 |  227105 | Kafka       |           1 |     26.99 |
+| 2014-02-15 |    41814 |  290298 | Swift       |           1 |     45.99 |
+| 2014-02-15 |    40814 |  272787 | Carlson     |          23 |     12.00 |
+| 2014-02-15 |    18144 |  290298 | Swift       |           1 |     45.99 |
+| 2014-02-15 |    18145 |  222477 | Rossetti    |           3 |     43.50 |
+| 2014-02-20 |    40836 |  258595 | Jobs        |           2 |     12.50 |
+| 2014-03-01 |    41840 |  267780 | Shelly      |           2 |     12.00 |
+| 2014-03-02 |    41850 |  234138 | Keats       |           1 |     40.49 |
+| 2014-03-02 |    41841 |  272787 | Carlson     |          50 |     25.00 |
+| 2014-03-03 |     4007 |  276381 | Collins     |          50 |     25.00 |
+| 2014-03-04 |    33001 |  282716 | Biederbecke |           6 |     60.00 |
+| 2014-03-08 |    41224 |  218709 | Bonnard     |           8 |     55.19 |
+| 2014-03-08 |    41852 |  261502 | Hawthorne   |           1 |     40.49 |
+| 2014-03-08 |     4003 |  200368 | Blake       |           5 |     45.00 |
+| 2014-03-08 |     4002 |  234138 | Keats       |          23 |     50.50 |
+| 2014-03-12 |    33002 |  282716 | Biederbecke |           6 |    202.13 |
+| 2014-03-12 |    33007 |  272787 | Carlson     |           4 |    126.19 |
+| 2014-03-13 |    33005 |  282716 | Biederbecke |           2 |     51.95 |
+| 2014-03-13 |    33006 |  272787 | Carlson     |           2 |     51.95 |
+| 2014-03-20 |    33013 |  282716 | Biederbecke |         149 |     71.00 |
+| 2014-03-21 |    33014 |  282716 | Biederbecke |          20 |     51.95 |
+| 2014-03-22 |    33022 |  282716 | Biederbecke |           1 |    199.95 |
+| 2014-03-22 |    33009 |  282716 | Biederbecke |           5 |     39.00 |
+| 2014-03-23 |    33008 |  282716 | Biederbecke |           7 |     57.00 |
+| 2014-03-23 |    33023 |  282716 | Biederbecke |           5 |     92.00 |
+| 2014-03-23 |    33025 |  282716 | Biederbecke |         397 |      4.50 |
+| 2014-03-24 |    33034 |  282716 | Biederbecke |           3 |     45.94 |
+| 2014-03-25 |    33035 |  282716 | Biederbecke |           2 |     90.00 |
+| 2014-03-26 |    33040 |  282716 | Biederbecke |           2 |     51.95 |
+| 2014-03-26 |    33017 |  282716 | Biederbecke |           1 |      4.00 |
++------------+----------+---------+-------------+-------------+-----------+
+38 rows in set (0.01 sec)
+
+--------------
+/*  TASK 06 */
+select CS.cust_id, CS.cust_name_last
+from a_bkorders.customers CS
+where (
+  select count(OHprevq.order_id)
+  from a_bkorders.order_headers OHprevq
+  where extract(year from OHprevq.order_date) = extract(year from current_date()) -1
+  and extract(quarter from OHprevq.order_date) = 1
+  and OHprevq.cust_id = CS.cust_id
+  group by OHprevq.cust_id
+) >= (
+  select count(OHnowq.order_id)
+  from a_bkorders.order_headers OHnowq
+  where extract(year from OHnowq.order_date) = extract(year from current_date())
+  and extract(quarter from OHnowq.order_date) = 1
+  and OHnowq.cust_id = CS.cust_id
+  group by OHnowq.cust_id
+)
+order by CS.cust_id
+--------------
+
++---------+----------------+
+| cust_id | cust_name_last |
++---------+----------------+
+|  221297 | Dodgson        |
+|  267780 | Shelly         |
+|  272787 | Carlson        |
++---------+----------------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+
+/*  TASK 08 */
+
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

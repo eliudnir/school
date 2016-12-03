@@ -1,0 +1,152 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sun Nov. 8 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			chk
+#		Inputs/Args: 	 
+#			First Argument:			-f or -u
+#			Second Argument:	  - a valid file path in case of first argument = -f
+#													- a valid user in case of first argument = -u
+#		Outputs:
+#			If either of input args are invalid: Error message
+#			If first input argument is -f:
+#					- Error if argument 2 is invalid path/file
+#					- Message that file is symlink, file or directory, whatever the case
+#					- If argument 2 is valid file or directory path:
+#							- Printout of permissions for this proc
+#			If first input argument is -u:
+#					- Error if argument 2 is not valid user on system
+#					- If argment 2 is a user, you get to see their home dir
+#					- If user is logged in or not, and last login if not logged on currently
+
+# Here we store our error output in case the chk command was invoked 
+# incorrectly - this will get printed in that case.
+chkerror="chk: ERROR! 
+chk takes two (valid) arguments! 
+
+Usage: 	chk { -f FILEPATH | -u USER }
+ex1: 	chk -f /home/batman/cave.slime
+ex2: 	chk -u tbundy"
+
+# First we test to see if there are in fact 2 arguments supplied when 
+# executing the file chk - This will print out an error and exit(1) if not
+if [ "$#" -ne 2 ]
+then 
+	echo "$chkerror"
+	exit 1
+fi
+
+# Then we can start figuring out what the arguments are and how to respond
+# First we test if the first argument is -f or -u (the very outermost if/elif/fi)
+# if this criteria is not met, we print error and exit (has to be either -f or -u)
+if [ "$1" = "-f" ]
+then
+
+	# This is the if/else/fi block that will check the second argument given if the 
+	# first argument given is -f
+	# we test here with the -e option to see if the path/file in argument two exists
+	if [ -e "$2" ]
+	then
+
+		# Here we know that argument one was -f and that argument two is a valid file/path
+		# so we test to see if the second argument is a symlink - if it is we inform the 
+		# user and send exit(0)
+		if [ -L "$2" ]
+		then 
+			echo "$2 is a SYMLINK"
+			exit 0
+
+		# Here we test if argument two is a valid directory OR file
+		elif [ -d "$2" ] || [ -f "$2" ] || [ -e "$2" ]
+		then
+
+			# here we discern with another if/elif/elif branch whether argument two
+			# is a directory or a file (know or not)
+			if [ -d "$2" ]
+			then
+				echo "$2 is a DIRECTORY"
+			elif [ -f "$2" ]
+			then
+				echo "$2 is a FILE"
+			elif [ -e "$2" ]
+			then
+				echo "$2 exists but is NOT A KNOWN FILE TYPE"
+			fi
+
+			# we don't really care if it was a file or not though, as we fall back
+			# to the above elif statement to print out permissions for file/directory
+			# either way here - we check for either read/write/exec one-by-one using if/fi
+			# blocks and write out if they are true
+			# test for readable
+			if [ -r "$2" ]
+			then 
+				echo "$2 is READABLE by the process"
+			fi 
+
+			# test for writable
+			if [ -w "$2" ]
+			then
+				echo "$2 is WRITABLE by the process"
+			fi
+
+			# test for executable
+			if [ -x "$2" ]
+			then
+				echo "$2 is EXECUTABLE"
+			fi
+			exit 0
+		fi
+	
+	# This is the else block designed to given an error if the path/file
+	# given with the -f flag for argment two is not a valid path, then we exit(1)
+	else
+		echo "The PATH given is not valid!"
+		exit 1
+	fi
+
+# this elif is started at the very top (with the -f check on first argument)
+# and here we instead check if the argument was -u - if not error/exit(1)
+elif [ "$1" = "-u" ]
+then 
+
+	# we check the exit status of grep on the second argument given to the command
+	# line against the entries in /etc/passwd - if this succeeds we know the user
+	# exists on the system
+	if $(cat /etc/passwd | grep "^$2:" > /dev/null)
+	then
+		# here we print out the report on the user, name, home directory, if they are
+		# currently online or last time online etc.
+		echo "$2 is a user on this system and"
+		echo "$(cat /etc/passwd | grep "^$2:" | cut -d: -f6) is their home directory"
+
+			# then we check the exit status of grep on argument two  and 
+			# indicate whether or not the user we queried for is logged on currently
+			# or not
+			if $(who | grep "^$2 " > /dev/null)
+			then
+				echo "$2 is logged on right now"
+				exit 0
+			
+			# this would be the "or not" part of the above comment
+			# where we also display their last time logged on
+			else
+				echo "$2 is not logged on right now, but their last login was:"
+				echo "$(last -1 $2 | grep "^$2 " | tr -s " " | cut -d" " -f4-7)"
+				exit 0
+			fi
+
+	# if exit status of the previous if/grep command didn't find anything, we 
+	# print informative error and exit(1)
+	else
+		echo "The USER "$2" does not exist on this system"
+		exit 1
+	fi
+
+# if we got neither argument correct/present on the execution call
+# we end up here, printing and error and exiting(1)
+else
+	echo "$chkerror"
+	exit 1
+fi

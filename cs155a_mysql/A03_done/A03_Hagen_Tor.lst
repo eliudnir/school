@@ -1,0 +1,232 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_vets
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): thagen@localhost
+current_date(): 2015-01-29
+     version(): 10.0.15-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select distinct an_id
+from vt_exam_headers
+--------------
+
++-------+
+| an_id |
++-------+
+| 12035 |
+| 15001 |
+| 15002 |
+| 15401 |
+| 16002 |
+| 16003 |
+| 17002 |
+| 17025 |
+| 17026 |
+| 17027 |
+| 19845 |
+| 21001 |
+| 21003 |
+| 21005 |
++-------+
+14 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select distinct concat(cl_postal_code, ': ', cl_city, ' ',  cl_state) as "Location"
+from vt_clients
+--------------
+
++-------------------------+
+| Location                |
++-------------------------+
+| 71601: Big Rock AR      |
+| 58503: Big Rock ND      |
+| 45502: Springfield OH   |
+| 10006: New York NY      |
+| 45402: Dayton OH        |
+| 62701: Springfield IL   |
+| 94112: San Francisco CA |
+| 94101: San Francisco CA |
+| 65802: Springfield MO   |
+| 21579: Spring Valley MA |
+| 87801: San Francisco NM |
+| 21555: Boston MA        |
+| 92101: San Diego CA     |
++-------------------------+
+13 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select cl_id, an_id
+from vt_animals
+where an_name is null
+--------------
+
++-------+-------+
+| cl_id | an_id |
++-------+-------+
+|  4534 | 11025 |
+|  4534 | 11029 |
+|  1852 | 21007 |
++-------+-------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select srv_id as 'Service ID', srv_type as 'Service Type',
+srv_list_price as 'Curr Price', srv_list_price * 0.1 as 'Tax Amnt'
+from vt_services
+where srv_type not in ("office visit")
+order by srv_id
+--------------
+
++------------+--------------+------------+----------+
+| Service ID | Service Type | Curr Price | Tax Amnt |
++------------+--------------+------------+----------+
+|        101 | treatment    |      50.00 |    5.000 |
+|        102 | treatment    |      45.00 |    4.500 |
+|        106 | treatment    |      75.00 |    7.500 |
+|        110 | treatment    |     100.00 |   10.000 |
+|        225 | medicine     |      75.00 |    7.500 |
+|        400 | treatment    |      10.50 |    1.050 |
+|        551 | medicine     |      35.50 |    3.550 |
+|        552 | medicine     |      25.00 |    2.500 |
+|        553 | medicine     |      25.00 |    2.500 |
+|        602 | treatment    |     222.00 |   22.200 |
+|        603 | treatment    |      78.00 |    7.800 |
+|        604 | treatment    |     109.00 |   10.900 |
+|        605 | treatment    |     535.00 |   53.500 |
+|        606 | treatment    |      40.00 |    4.000 |
+|        607 | treatment    |      57.00 |    5.700 |
+|        612 | medicine     |      25.91 |    2.591 |
+|        613 | treatment    |      47.00 |    4.700 |
+|        615 | medicine     |      78.30 |    7.830 |
+|        625 | treatment    |     155.00 |   15.500 |
+|        687 | medicine     |      45.00 |    4.500 |
+|        748 | medicine     |      29.50 |    2.950 |
+|        749 | medicine     |      29.50 |    2.950 |
+|       1002 | medicine     |      25.00 |    2.500 |
+|       1003 | treatment    |      26.00 |    2.600 |
+|       4601 | treatment    |     275.00 |   27.500 |
++------------+--------------+------------+----------+
+25 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select ex_id, srv_id, ex_fee
+from vt_exam_details
+where ex_fee between 15.00 and 22.50
+order by srv_id
+--------------
+
++-------+--------+--------+
+| ex_id | srv_id | ex_fee |
++-------+--------+--------+
+|  3202 |    341 |  20.00 |
+|  3411 |    341 |  20.00 |
+|  3412 |    341 |  20.00 |
+|  3392 |    400 |  21.00 |
+|  3203 |    524 |  20.00 |
+|  3323 |    524 |  20.00 |
+|  3514 |   1002 |  15.00 |
++-------+--------+--------+
+7 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+select cl_id, an_id, an_name
+from vt_animals
+where an_type in ('hamster', 'capybara', 'porcupine', 'dormouse')
+order by cl_id, an_id
+--------------
+
++-------+-------+-----------+
+| cl_id | an_id | an_name   |
++-------+-------+-----------+
+|  1825 | 16002 | Fritz     |
+|  1825 | 21005 | Koshka    |
+|  1825 | 21006 | Koshka    |
+|  3560 | 12038 | Gutsy     |
+|  5699 | 17002 | Fritzchen |
++-------+-------+-----------+
+5 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select distinct cl_id, an_type
+from vt_animals
+where an_type in ('snake', 'chelonian', 'crocodilian', 'lizard')
+order by cl_id
+--------------
+
++-------+-----------+
+| cl_id | an_type   |
++-------+-----------+
+|   411 | lizard    |
+|  1852 | snake     |
+|  4534 | snake     |
+|  5699 | chelonian |
+|  5699 | lizard    |
+|  5699 | snake     |
+|  7152 | lizard    |
++-------+-----------+
+7 rows in set (0.00 sec)
+
+--------------
+/*  TASK 08 */
+select cl_id, an_id, an_name, an_dob
+from a_vets.vt_animals
+where an_type not in ('hamster', 'capybara', 'porcupine', 'dormouse', 'snake', 'chelonian', 'crocodilian', 'lizard')
+order by an_dob desc
+--------------
+
++-------+-------+-----------------+------------+
+| cl_id | an_id | an_name         | an_dob     |
++-------+-------+-----------------+------------+
+|  1852 | 21320 | Morris          | 2014-06-11 |
+|  1852 | 21321 | Morton          | 2014-06-03 |
+|  1825 | 16003 | Ursula          | 2013-02-06 |
+|   411 | 21001 | Yoggie          | 2013-01-22 |
+|  4534 | 11029 | NULL            | 2012-10-01 |
+|  1852 | 21318 | Waldrom         | 2012-06-11 |
+|  1852 | 21315 | Baldric         | 2012-06-11 |
+|  4534 | 11025 | NULL            | 2012-02-01 |
+|  1852 | 21317 | Manfried        | 2011-06-11 |
+|  1852 | 21314 | Adalwine        | 2011-06-11 |
+|  1852 | 21316 | Etta            | 2010-06-11 |
+|  3560 | 10002 | Gutsy           | 2010-04-15 |
+|   411 | 19845 | Pinkie          | 2009-02-02 |
+|  6897 | 16004 | Napper          | 2006-06-06 |
+|   411 | 15165 | Burgess         | 2005-11-20 |
+|   411 | 21003 | Calvin Coolidge | 2004-06-18 |
+|  1825 | 21002 | Edger           | 2002-10-02 |
+|  3560 | 12035 | Mr Peanut       | 1995-02-28 |
++-------+-------+-----------------+------------+
+18 rows in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

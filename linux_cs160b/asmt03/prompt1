@@ -1,0 +1,91 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Mon Nov. 23 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			prompt1
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+
+# a bool to signal if we keep the outer loop going or not
+# and an array to store user inputs that are "matched" into
+keepgoing=true
+musicarray=()
+
+# colors just cause we can
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+ORANGE='\033[0;33m'
+NC='\033[0m'
+
+# our "main" loop for the program, we will repeat here until q/quit is input by the user on the 
+# read command below, in that case we flip the bool and quit out of the loop
+while [[ "$keepgoing" = true ]] ; 
+do
+	echo -e "What kind of music do you listen to?"
+	echo -e "(folk, electronic, blues, jazz, classical, rock or ${RED}quit${NC})"
+	read choice
+
+	case $choice in
+
+		# Then we match $choice to either folk or f (or any other category or first letter of that category)
+		# at the end of each command set we update the musicarray to be itself concatenated with the $choice 
+		# variable the user set
+		"folk"|"f" )
+			echo -e "${BLUE}How many folk singers does it take to change a light bulb?${NC}\n${GREEN}Three. One to change it and two to sing about how great the old one was.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# electrolic or e
+		"electronic"|"e" )
+			echo -e "${ORANGE}It used to be called modem noise, now it's called Skrillex.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# blues or b
+		"blues"|"b" )
+			echo -e "${BLUE}If it doesn't open with 'I woke up this morning...', start over...${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# jazz or j
+		"jazz"|"j" )
+			echo -e "${CYAN}How does a Jazz musician end up with a million dollars?${NC}\n${GREEN}By starting out with two million dollars.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# classical or c
+		"classical"|"c" )
+			echo -e "${BLUE}Why couldn't the string quartet find their composer?${NC}\n${GREEN}He was Haydn.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# rock or r
+		"rock"|"r" )
+			echo -e "${CYAN}What does a lead guitarist use for contraception?${NC}\n${GREEN}His personality.${NC}"
+			echo
+			musicarray=("${musicarray[*]}"$choice" ")
+			;;
+
+		# quit or q
+		"quit"|"q" )
+			echo -e "OK quitting."
+			keepgoing=false
+			;;
+	esac
+done
+
+# Then we just print out whatever we accumulated into the musicarray during the loop when we exit
+echo -e "You matched the following words while the program ran:"
+echo -e "${musicarray[*]}"

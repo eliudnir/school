@@ -1,0 +1,315 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_bkinfo
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-04-10
+     version(): 10.0.17-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/* function source code */
+show create function a_testbed.AdjustedPrice
+--------------
+
+*************************** 1. row ***************************
+            Function: AdjustedPrice
+            sql_mode: 
+     Create Function: CREATE DEFINER=`eliudnir`@`localhost` FUNCTION `AdjustedPrice`(
+	in_price decimal(6,2), 
+    in_quantity int ) RETURNS decimal(6,2)
+begin
+	declare v_adjusted_price decimal(6,2);
+    if (in_price is null or in_quantity is null) then
+		set v_adjusted_price := null;
+	elseif (in_price < 0.0 or in_quantity < 0) then
+		set v_adjusted_price := null;
+    elseif (in_price < 10.00) then
+		set v_adjusted_price := in_price;
+	elseif (in_quantity in (0, 1, 2, 3)) then
+		set v_adjusted_price := in_price;
+    elseif (in_quantity between 4 and 10) then
+		set v_adjusted_price := in_price - (in_price * 0.05);
+	elseif (in_quantity between 11 and 25) then
+		set v_adjusted_price := in_price - (in_price * 0.1);
+	elseif (in_quantity between 26 and 100) then
+		set v_adjusted_price := in_price - (in_price * 0.15);
+	elseif (in_quantity > 100) then
+		set v_adjusted_price := in_price - (in_price * 0.18);
+    end if;
+    return v_adjusted_price;
+end
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: utf8_general_ci
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select test_data.testrun,
+test_data.price,
+test_data.quantity,
+test_data.expected,
+a_testbed.AdjustedPrice(test_data.price, test_data.quantity) as "Actual",
+test_data.expected - a_testbed.AdjustedPrice(test_data.price, test_data.quantity) as "Problem"
+from (
+    select 1 as testrun, 9.50 as price, 10 as quantity, 9.50 as expected
+  union all
+    select 2, 15.00, 1, 15.00
+  union all
+    select 3, 15.00, 3, 15.00
+  union all
+    select 4, 20.00, 99, 17.00
+  union all
+    select 5, 30.00, 26, 25.50
+  union all
+    select 6, 30.00, 200, 24.60
+  union all
+    select 7, 15.00, 25, 13.50
+  union all
+    select 8, 4.50, 200, 4.50
+  union all
+    select 9, 15.00, 101, 12.30
+  union all
+    select 10, 15.00, 0, 15.00
+) test_data
+--------------
+
++---------+-------+----------+----------+--------+---------+
+| testrun | price | quantity | expected | Actual | Problem |
++---------+-------+----------+----------+--------+---------+
+|       1 |  9.50 |       10 |     9.50 |   9.50 |    0.00 |
+|       2 | 15.00 |        1 |    15.00 |  15.00 |    0.00 |
+|       3 | 15.00 |        3 |    15.00 |  15.00 |    0.00 |
+|       4 | 20.00 |       99 |    17.00 |  17.00 |    0.00 |
+|       5 | 30.00 |       26 |    25.50 |  25.50 |    0.00 |
+|       6 | 30.00 |      200 |    24.60 |  24.60 |    0.00 |
+|       7 | 15.00 |       25 |    13.50 |  13.50 |    0.00 |
+|       8 |  4.50 |      200 |     4.50 |   4.50 |    0.00 |
+|       9 | 15.00 |      101 |    12.30 |  12.30 |    0.00 |
+|      10 | 15.00 |        0 |    15.00 |  15.00 |    0.00 |
++---------+-------+----------+----------+--------+---------+
+10 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select tst.order_id, tst.book_id, tst.LIST, tst.quantity,
+tst.ExpctdPrice, tst.OrderPrice, tst.PricingError
+from (
+  select OD.order_id, OD.book_id, BO.list_price as "LIST", OD.quantity,
+  a_testbed.AdjustedPrice(BO.list_price, OD.quantity) as "ExpctdPrice",
+  OD.order_price as "OrderPrice",
+  a_testbed.AdjustedPrice(BO.list_price, OD.quantity) - OD.order_price as "PricingError"
+  from a_bkorders.order_details OD
+  join a_bkinfo.books BO using (book_id)
+) tst
+where tst.PricingError > (tst.ExpctdPrice * 0.2)
+order by tst.book_id, tst.order_id
+--------------
+
++----------+---------+-------+----------+-------------+------------+--------------+
+| order_id | book_id | LIST  | quantity | ExpctdPrice | OrderPrice | PricingError |
++----------+---------+-------+----------+-------------+------------+--------------+
+|     1027 |    1077 | 40.25 |       22 |       36.23 |      10.99 |        25.24 |
+|     1661 |    1103 | 12.00 |       97 |       10.20 |       2.00 |         8.20 |
+|    32906 |    1103 | 12.00 |        1 |       12.00 |       5.75 |         6.25 |
+|    52906 |    1103 | 12.00 |        1 |       12.00 |       5.75 |         6.25 |
+|     1004 |    1106 | 29.00 |        2 |       29.00 |      18.25 |        10.75 |
+|     1420 |    1109 | 80.00 |       30 |       68.00 |      25.00 |        43.00 |
+|    21850 |    1109 | 80.00 |        1 |       80.00 |      25.00 |        55.00 |
+|    31889 |    1109 | 80.00 |       18 |       72.00 |      50.60 |        21.40 |
+|    33001 |    1109 | 80.00 |        3 |       80.00 |      25.00 |        55.00 |
+|     1411 |    1128 | 49.95 |       50 |       42.46 |      25.00 |        17.46 |
+|     1442 |    1128 | 49.95 |       25 |       44.96 |      12.50 |        32.46 |
+|    32800 |    1128 | 49.95 |       50 |       42.46 |      25.00 |        17.46 |
+|    32849 |    1128 | 49.95 |        5 |       47.45 |      25.00 |        22.45 |
+|    32899 |    1128 | 49.95 |       50 |       42.46 |      25.00 |        17.46 |
+|    42899 |    1128 | 49.95 |        5 |       47.45 |      25.00 |        22.45 |
+|    60032 |    1128 | 49.95 |        5 |       47.45 |      25.00 |        22.45 |
+|     1005 |    1142 | 95.00 |        2 |       95.00 |      42.45 |        52.55 |
+|     1255 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|     1261 |    1142 | 95.00 |      100 |       80.75 |      34.95 |        45.80 |
+|     1555 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|     1561 |    1142 | 95.00 |        1 |       95.00 |      34.95 |        60.05 |
+|     5261 |    1142 | 95.00 |      100 |       80.75 |      34.95 |        45.80 |
+|     5555 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|     5561 |    1142 | 95.00 |        1 |       95.00 |      34.95 |        60.05 |
+|    21255 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|    21261 |    1142 | 95.00 |      100 |       80.75 |      34.95 |        45.80 |
+|    31830 |    1142 | 95.00 |      100 |       80.75 |      34.95 |        45.80 |
+|    31866 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|    32891 |    1142 | 95.00 |        5 |       90.25 |      15.00 |        75.25 |
+|    32907 |    1142 | 95.00 |       10 |       90.25 |      11.14 |        79.11 |
+|    33009 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|    41005 |    1142 | 95.00 |        2 |       95.00 |      42.45 |        52.55 |
+|    41006 |    1142 | 95.00 |       10 |       90.25 |      42.95 |        47.30 |
+|    42331 |    1142 | 95.00 |        5 |       90.25 |      15.00 |        75.25 |
+|    42891 |    1142 | 95.00 |        1 |       95.00 |      15.00 |        80.00 |
+|    60009 |    1142 | 95.00 |      100 |       80.75 |      34.95 |        45.80 |
+|    60019 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|    60032 |    1142 | 95.00 |        5 |       90.25 |      39.00 |        51.25 |
+|    18142 |    1279 | 44.99 |        1 |       44.99 |      26.99 |        18.00 |
+|    18144 |    1304 | 59.99 |        1 |       59.99 |      45.99 |        14.00 |
+|    32900 |    1305 |  9.99 |      125 |        9.99 |       5.00 |         4.99 |
+|    32902 |    1305 |  9.99 |       49 |        9.99 |       6.00 |         3.99 |
+|    32904 |    1305 |  9.99 |      450 |        9.99 |       5.19 |         4.80 |
+|    33013 |    1305 |  9.99 |       49 |        9.99 |       6.00 |         3.99 |
+|    52900 |    1305 |  9.99 |      125 |        9.99 |       5.00 |         4.99 |
+|     1200 |    1457 | 79.99 |        5 |       75.99 |      53.99 |        22.00 |
+|    32997 |    1457 | 79.99 |        5 |       75.99 |      53.99 |        22.00 |
+|    51854 |    1537 | 29.95 |       15 |       26.96 |      15.37 |        11.59 |
+|    60027 |    1537 | 29.95 |       15 |       26.96 |      15.37 |        11.59 |
+|    30855 |    1602 |  2.95 |      500 |        2.95 |       2.00 |         0.95 |
+|    33025 |    1602 |  2.95 |       97 |        2.95 |       2.00 |         0.95 |
+|    60039 |    1602 |  2.95 |       97 |        2.95 |       2.00 |         0.95 |
+|    33034 |    1619 | 29.99 |        2 |       29.99 |      15.95 |        14.04 |
+|    33040 |    1626 | 25.95 |        1 |       25.95 |      19.95 |         6.00 |
+|     1212 |    1894 | 39.99 |        1 |       39.99 |      18.75 |        21.24 |
+|    51843 |    1894 | 39.99 |        1 |       39.99 |      18.75 |        21.24 |
+|     1028 |    2001 | 49.99 |        1 |       49.99 |      19.78 |        30.21 |
+|     1262 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     1491 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     1561 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     1562 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     1603 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     5262 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     5491 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     5561 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|     5562 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|    60018 |    2001 | 49.99 |        1 |       49.99 |      39.00 |        10.99 |
+|    32892 |    2002 | 39.99 |        5 |       37.99 |      15.00 |        22.99 |
+|     1410 |    2006 | 44.99 |       35 |       38.24 |      20.00 |        18.24 |
+|    32898 |    2006 | 44.99 |        3 |       44.99 |      20.00 |        24.99 |
+|    32998 |    2006 | 44.99 |        3 |       44.99 |      20.00 |        24.99 |
+|    30848 |    2007 | 44.99 |        2 |       44.99 |      12.50 |        32.49 |
+|     1442 |    2008 | 59.99 |       40 |       50.99 |      34.95 |        16.04 |
+|     1562 |    2008 | 59.99 |        1 |       59.99 |      46.95 |        13.04 |
+|     1605 |    2008 | 59.99 |        1 |       59.99 |      39.00 |        20.99 |
+|     1800 |    2008 | 59.99 |        1 |       59.99 |      46.95 |        13.04 |
+|     5562 |    2008 | 59.99 |        1 |       59.99 |      46.95 |        13.04 |
+|    30836 |    2008 | 59.99 |        2 |       59.99 |      12.50 |        47.49 |
+|    40836 |    2008 | 59.99 |        2 |       59.99 |      12.50 |        47.49 |
+|     2013 |    2009 | 29.99 |        2 |       29.99 |      12.50 |        17.49 |
+|    51852 |    2017 | 49.99 |        1 |       49.99 |       0.00 |        49.99 |
+|    60027 |    2017 | 49.99 |        1 |       49.99 |       0.00 |        49.99 |
+|     1040 |    2025 | 59.99 |      560 |       49.19 |      39.00 |        10.19 |
+|    51852 |    2032 | 55.99 |        1 |       55.99 |       0.00 |        55.99 |
+|    60027 |    2032 | 55.99 |        1 |       55.99 |       0.00 |        55.99 |
++----------+---------+-------+----------+-------------+------------+--------------+
+85 rows in set (0.02 sec)
+
+--------------
+/* function source code */
+show create function a_testbed.PrevMonth
+--------------
+
+*************************** 1. row ***************************
+            Function: PrevMonth
+            sql_mode: 
+     Create Function: CREATE DEFINER=`eliudnir`@`localhost` FUNCTION `PrevMonth`(
+	in_date date,
+    in_mn_adjust int ) RETURNS varchar(7) CHARSET utf8
+begin
+	declare v_date date;
+    declare v_output_date varchar(7);
+    
+	set v_date := coalesce(in_date, current_date());
+	
+    if (in_mn_adjust is null) or (in_mn_adjust < 0) then
+		set v_output_date := "NULL";
+	else
+		set v_output_date := date_add(v_date, interval -in_mn_adjust month);
+    end if;
+    
+	return v_output_date;
+end
+character_set_client: utf8
+collation_connection: utf8_general_ci
+  Database Collation: utf8_general_ci
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select tst.testrun, tst.date_in, tst.month_in,
+a_testbed.PrevMonth(tst.date_in, tst.month_in) as "actual",
+tst.expected,
+case tst.expected
+  when a_testbed.PrevMonth(tst.date_in, tst.month_in) then "pass"
+  else "***FAIL***"
+end as "status"
+from (
+    select 1 as testrun, null as "date_in", 0 as "month_in", "2015-04" as "expected"
+  union all
+    select 2, '2012-04-01', 0, "2012-04"
+  union all
+    select 3, '2012-04-10', 18, "2010-10"
+  union all
+    select 4, '2014-04-10', null, "NULL"
+  union all
+    select 5, '2013-03-02', -3, "NULL"
+  union all
+    select 6, '2015-04-01', 30, "2012-10"
+) tst
+--------------
+
++---------+------------+----------+---------+----------+--------+
+| testrun | date_in    | month_in | actual  | expected | status |
++---------+------------+----------+---------+----------+--------+
+|       1 | NULL       |        0 | 2015-04 | 2015-04  | pass   |
+|       2 | 2012-04-01 |        0 | 2012-04 | 2012-04  | pass   |
+|       3 | 2012-04-10 |       18 | 2010-10 | 2010-10  | pass   |
+|       4 | 2014-04-10 |     NULL | NULL    | NULL     | pass   |
+|       5 | 2013-03-02 |       -3 | NULL    | NULL     | pass   |
+|       6 | 2015-04-01 |       30 | 2012-10 | 2012-10  | pass   |
++---------+------------+----------+---------+----------+--------+
+6 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select count(*) as "NumberOrders",
+count(distinct tbl_data.cust_id) as "NumberCustWithOrders"
+from (
+  select OH.order_id, OH.cust_id
+  from a_bkorders.order_headers OH
+  where substring_index(OH.order_date, '-', 2)
+  in (a_testbed.PrevMonth(current_date(), 2), a_testbed.PrevMonth(current_date(), 1))
+) tbl_data
+--------------
+
++--------------+----------------------+
+| NumberOrders | NumberCustWithOrders |
++--------------+----------------------+
+|           69 |                   21 |
++--------------+----------------------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+
+/*  TASK 06 */
+
+/*  TASK 07 */
+
+/*  TASK 08 */
+
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

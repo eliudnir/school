@@ -1,0 +1,52 @@
+#!/bin/bash
+
+#    Author:         Tor Hagen
+#    Class:          CS160B
+#    Date:           Fri. 30 Oct. 2015
+#    Instructor:     Peter Wood
+#    NoF:            aboutme 
+#		 Inputs/Args: 	 none
+#		 Outputs: 			 Information about the current user running this file
+
+# First we test and error out if LOGNAME or PATH variables are not set
+# we achieve this by using the :? which prints the error and exits if the 
+# variable (LOGNAME or PATH) is Null or Unset
+lname=${LOGNAME:?ERROR - LOGNAME variable not set}
+pth=${PATH:?ERROR - PATH variable not set}
+
+# Here we store whatever is stored under the full name of finger info
+# into the variable fname - if this is null, we set name to whatever lname is
+# which is LOGNAME in this script
+fname=$(finger $lname | grep 'Name: [^(null)]' | cut -c32-)
+name=${fname:-${lname}}
+
+# store the system hostname to hstname variable, pretty straight forward
+# call to hostname system info
+hstname=$(hostname)
+
+# As explained above, the name variable will contain either your login or the finger info full
+# name at this point based on whether the finger info has been set or not
+echo "Welcome $name, here we go, starting script: "
+# we stored the current system hostname to a variable and here we display it using echo
+echo "The system hostname is: $hstname"
+# given the exact wording of the question, I took this to mean "previous login, not current session (if you have logged in before)"
+# and in that context: this prints out the previous login for whatver name is stored in lname variable
+echo "The date and time of your last login was: $(last -2 $lname | head -2 | tail -1 | tr -s ' ' | cut -d ' ' -f4-7)"
+# the wording of the question just asks for a total, yet the example script hosted by instructor just prints the number in either 
+# bin. I have added both since there seems to be some confusion. 
+echo "And it looks like you have $(($(printenv | wc -l)+$(export -p | wc -l))) total local and exported variables"
+echo "that is $(printenv | wc -l) local variables, and $(export -p | wc -l) exported variables respectively"
+# This will print out what is stored in pth (PATH) separating each value : and translating them to new-lines instead
+echo "I will now print all the directories in your search path, by order (one per line):"
+echo $pth | tr : '\n'
+# Here we find the current 1-minute system load average by cutting and translating the output of the uptime command
+echo "The current one minute load average is $(uptime | tr -s ' ' | cut -d ' ' -f11 | tr , ' ')"
+# And then we do a similar operation to the previous one to extract  how long the system has been up (time since boot)
+echo "The system has been up for $(uptime | cut -d, -f1,2 | cut -c11-)"
+# Here we grab the mount point of the $PWD (current location) variable output from the df command which gives information about the fs
+echo "The mount point at this location is $(df $PWD | tail -1 | tr -s ' ' | cut -d' ' -f6)"
+# Then we notice that the question isn't asking for % used, as the df command gives, but instead the current free %, and we solve this
+# by using some arithmetic: 100 - used = free%
+echo "And it is $((100 - $(df $PWD | tail -1 | tr -s ' ' | cut -d' ' -f5 | sed 's/%//')))% free at this moment"
+# then we turn the 1k block number of free data into MiB by using arithmetic again and dividing by 1024
+echo "which is $(($(df $PWD | tail -1 | tr -s ' ' | cut -d' ' -f4) / 1024)) MiB of free space"

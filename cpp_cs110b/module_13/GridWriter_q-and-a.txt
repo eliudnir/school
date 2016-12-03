@@ -1,0 +1,37 @@
+1.  The two argument constructor of the Shape class contains this code:
+this->x = x;
+this->y = y;
+Why is it necessary to put  “this->” in front of x and y? If you are not sure then remove these lines and see if it changes the output.
+
+1. ANSWER:
+Shape is an abstract base-class in this example, and its constructor takes two integer inputs nameley 'x' and 'y'. However, since the constructor call parameters in this case are the same name as the variables in the block scope inside the constroctor, we use the 'this->' technique to specify that we are accessing outside the constructors block and setting the class' protected member variables (x and y) instead. If we ommit the 'this->' preceeding the assignments in the constructor body, the effect is the same as to set the variables to the input arguments, which will then be thrown away when the block scope ends (and nothing is actually achieved by the constructor call). A more common convention in modern C++ is to declare member data of a class in such cases as m_<variable-name> or similarly to avoid having to specify correct scope with the 'this->' technique and produce more readable code. 
+
+2.  In the containsPoint member function of Circle, why are this->x and this->y in scope, even though they are not defined as member variables in Circle.h?
+
+2. ANSWER:
+The Circle class has 'this->x' and 'this->y' accessible within its own scope because it inherits from the abstract class Shape which has two protected member data variables (integers) named 'x' and 'y'. This gives Circle instantiations their own integer x and y values which can be accessed/set using the 'this->' technique. 
+
+3.  What is the purpose of the keyword “virtual” in front of Shape::containsPoint and Shape::getArea?  What is the purpose of the “ = 0”?
+
+3. ANSWER:
+a) The purpose of the word 'virtual' preceeding said methods is to ensure that they can be dynamically overwritten by sub classes that inherit from Shape.h.
+b) The purpose of the assignment ' = 0' after said methods is to make them 'pure virtual', which will ensure that this class (Shape) is an abstract class and cannot be instantiated. Classes that inherit from Shape will have to overwrite these methods with their own member methods. 
+
+4.  In Circle.cpp the three argument Circle constructor is defined like this:
+Circle:: Circle(double x, double y, double radius) : Shape(x, y) {
+	this->radius = radius;
+}
+What is the purpose of the “: Shape(x, y)” (shown in bold in the code above). What happens if you remove it?
+
+4. ANSWER:
+No, the Circle.cpp three argument Circle constructor is defined like this:
+Circle::Circle(int x, int y, int radius) : Shape(x, y) {
+	this->radius = radius;
+}
+In the files linked to by the instructor on the google document. (downloaded Dec. 5th 2015).
+In either case the purpose of ': Shape(x, y)' code is to call the constructor on the base class (Shape) that Circle.h inherits from. This ensures that the 'x' and 'y' values passed to Circle's constructor is set in the base-object Shape's 'x' and 'y' which any derived object (like the Circle one) inherited given that the member data was declared as protected and not private.
+
+5.  List an example of polymorphism that you can find in the code base.  That is to say, list a statement where the datatype of a reference or pointer is not an exact match with the datatype of the object that it refers to.  
+
+5. ANSWER:
+We can see examples of Polymorphism in the GridWriter.cpp file where the add() (line 33) member method has been implemented. The input to the method is a pointer to a Shape object, however since Shape is an abstract base-class it can't be instantiated, so antything passed into this method will have to be a class that inherits from Shape, namely Rectangle or Circle. 

@@ -1,0 +1,81 @@
+2015-11-30||10:21:35||'thagen'	 ** Script started **	Mon Nov 30 10:21:35 PST 2015
+2015-11-30||10:21:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:21:35||'thagen'	 ** Starting session log **
+2015-11-30||10:21:37||'thagen'	 -- user raw input: quit
+2015-11-30||10:21:37||'thagen'	 ** Script ended **	Mon Nov 30 10:21:37 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** Script started **	Mon Nov 30 10:30:35 PST 2015
+2015-11-30||10:30:35||'thagen'	 ** By user **	thagen
+2015-11-30||10:30:35||'thagen'	 ** Starting session log **
+2015-11-30||10:30:41||'thagen'	 -- user raw input: e
+2015-11-30||10:30:41||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:30:54||'thagen'	 -- user raw input: classical
+2015-11-30||10:30:54||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:01||'thagen'	 -- user raw input: folky
+2015-11-30||10:31:05||'thagen'	 -- user raw input: electronic
+2015-11-30||10:31:05||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:08||'thagen'	 -- user raw input: rock
+2015-11-30||10:31:08||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:09||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:09||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:10||'thagen'	 -- user raw input: quit
+2015-11-30||10:31:10||'thagen'	 ** Script ended **	Mon Nov 30 10:31:10 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** Script started **	Mon Nov 30 10:31:28 PST 2015
+2015-11-30||10:31:28||'thagen'	 ** By user **	thagen
+2015-11-30||10:31:28||'thagen'	 ** Starting session log **
+2015-11-30||10:31:30||'thagen'	 -- user raw input: r
+2015-11-30||10:31:30||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:31||'thagen'	 -- user raw input: r
+2015-11-30||10:31:31||'thagen'	 ++ which maps to 'rock'
+2015-11-30||10:31:32||'thagen'	 -- user raw input: c
+2015-11-30||10:31:32||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:34||'thagen'	 -- user raw input: classical
+2015-11-30||10:31:34||'thagen'	 ++ which maps to 'classical'
+2015-11-30||10:31:35||'thagen'	 -- user raw input: jazz
+2015-11-30||10:31:35||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:31:37||'thagen'	 -- user raw input: jayzz
+2015-11-30||10:31:39||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:39||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: blues
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:40||'thagen'	 -- user raw input: b
+2015-11-30||10:31:40||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:31:43||'thagen'	 -- user raw input: folk
+2015-11-30||10:31:43||'thagen'	 ++ which maps to 'folk'
+2015-11-30||10:31:46||'thagen'	 -- user raw input: trurck
+2015-11-30||10:31:51||'thagen'	 -- user raw input: rocknrolla
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:53||'thagen'	 -- user raw input: e
+2015-11-30||10:31:53||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:31:57||'thagen'	 -- user raw input: q
+2015-11-30||10:31:57||'thagen'	 ** Script ended **	Mon Nov 30 10:31:57 PST 2015
+2015-11-30||10:34:06||'thagen'	 ** Script started **	Mon Nov 30 10:34:06 PST 2015
+2015-11-30||10:34:06||'thagen'	 ** By user **	thagen
+2015-11-30||10:34:06||'thagen'	 ** Starting session log **
+2015-11-30||10:34:12||'thagen'	 -- user raw input: smirk
+2015-11-30||10:34:14||'thagen'	 -- user raw input: pork
+2015-11-30||10:34:17||'thagen'	 -- user raw input: chops
+2015-11-30||10:34:19||'thagen'	 -- user raw input: jazz
+2015-11-30||10:34:19||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:20||'thagen'	 -- user raw input: j
+2015-11-30||10:34:20||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:20||'thagen'	 -- user raw input: j
+2015-11-30||10:34:20||'thagen'	 ++ which maps to 'jazz'
+2015-11-30||10:34:21||'thagen'	 -- user raw input: blues
+2015-11-30||10:34:21||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:22||'thagen'	 -- user raw input: b
+2015-11-30||10:34:22||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:23||'thagen'	 -- user raw input: b
+2015-11-30||10:34:23||'thagen'	 ++ which maps to 'blues'
+2015-11-30||10:34:25||'thagen'	 -- user raw input: electronic
+2015-11-30||10:34:25||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:26||'thagen'	 -- user raw input: e
+2015-11-30||10:34:26||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:26||'thagen'	 -- user raw input: e
+2015-11-30||10:34:26||'thagen'	 ++ which maps to 'electronic'
+2015-11-30||10:34:27||'thagen'	 -- user raw input: q
+2015-11-30||10:34:27||'thagen'	 ** Script ended **	Mon Nov 30 10:34:27 PST 2015

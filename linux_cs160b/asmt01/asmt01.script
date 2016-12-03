@@ -1,0 +1,92 @@
+Script started on Mon 02 Nov 2015 03:56:51 PM PST
+[thagen@hills cs160b]$ cat /etc/passwd | grep 'thagen'
+thagen:x:32677:506:Tor Hagen,,,415-518-4078:/students/thagen:/bin/bash
+[thagen@hills cs160b]$ echo $PATH
+/usr/lib64/qt-3.3/bin:/usr/local/bin:/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/students/thagen/bin:.
+[thagen@hills cs160b]$ uptime
+ 15:57:31 up 79 days, 16:59, 91 users,  load average: 0.02, 0.01, 0.00
+[thagen@hills cs160b]$ last -2 $LOGNAME
+thagen   pts/67                        Mon Nov  2 15:56   still logged in   
+thagen   pts/61       67.170.233.185   Mon Nov  2 15:56   still logged in   
+
+wtmp begins Sun Nov  1 05:07:42 2015
+[thagen@hills cs160b]$ df
+Filesystem           1K-blocks     Used Available Use% Mounted on
+/dev/mapper/vg00-lv_root
+                      24639868  4669104  18712476  20% /
+tmpfs                 24707220  3215700  21491520  14% /dev/shm
+/dev/sda1               487652   117458    344594  26% /boot
+/dev/mapper/vg00-lv_home
+                       8125880   552460   7153992   8% /home
+/dev/mapper/vg00-lv_opt
+                      12254384  9297636   2327604  80% /opt
+/dev/mapper/vg00-lv_ora1
+                      32896880 17851968  13367192  58% /oracle
+/dev/mapper/vg00-lv_tmp
+                      10190136  1161104   8504744  13% /tmp
+/dev/mapper/vg00-lv_usr
+                      12254384  4965956   6659284  43% /usr
+/dev/mapper/vg00-lv_local
+                      31219684 23883228   5750364  81% /usr/local
+/dev/mapper/vg00-lv_var
+                      24639868  7526824  15854756  33% /var
+/dev/mapper/vg00-lv_spcwww
+                        487652   273478    188574  60% /spcwww
+/dev/mapper/vg00-lv_users
+                      22575612  8498768  12923412  40% /users
+/dev/mapper/vg01-lv_students
+                     254013044 90273280 150829992  38% /students
+[thagen@hills cs160b]$ ./aboutme 
+Welcome Tor Hagen, here we go, starting script: 
+The system hostname is: hills.ccsf.cc.ca.us
+The date and time of your last login was: Mon Nov 2 15:56
+And it looks like you have 62 total local and exported variables
+that is 32 local variables, and 30 exported variables respectively
+I will now print all the directories in your search path, by order (one per line):
+/usr/lib64/qt-3.3/bin
+/usr/local/bin
+/bin
+/usr/bin
+/usr/local/sbin
+/usr/sbin
+/sbin
+/students/thagen/bin
+.
+The current one minute load average is 0.02 
+The system has been up for up 79 days, 17:00
+The mount point at this location is /students
+And it is 62% free at this moment
+which is 147294 MiB of free space
+[thagen@hills cs160b]$ cd /boot/
+[thagen@hills boot]$ /stu    ./student         /students/th
+thagen/   tharri30/ thausman/ thayes4/  thiraka1/ thoh/     thu8/     thuang6/  thurley2/
+tharmon2/ thaskins/ thavey/   thedley/  tho22/    thorikos/ thu9/     thudgins/ thuynh5/
+tharri27/ thastin2/ thawley/  thenley/  tho36/    thsu6/    thuang26/ thui5/    thuynh55/
+[thagen@hills boot]$ /students/thagen/public_html/cs160b/aboutme 
+Welcome Tor Hagen, here we go, starting script: 
+The system hostname is: hills.ccsf.cc.ca.us
+The date and time of your last login was: Mon Nov 2 15:56
+And it looks like you have 62 total local and exported variables
+that is 32 local variables, and 30 exported variables respectively
+I will now print all the directories in your search path, by order (one per line):
+/usr/lib64/qt-3.3/bin
+/usr/local/bin
+/bin
+/usr/bin
+/usr/local/sbin
+/usr/sbin
+/sbin
+/students/thagen/bin
+.
+The current one minute load average is 0.00 
+The system has been up for up 79 days, 17:01
+The mount point at this location is /boot
+And it is 74% free at this moment
+which is 336 MiB of free space
+[thagen@hills boot]$ LOGNAME =  = 
+[thagen@hills boot]$ LOGNAME= /students/thagen/public_html/cs160b/aboutme 
+/students/thagen/public_html/cs160b/aboutme: line 14: LOGNAME: ERROR - LOGNAME variable not set
+[thagen@hills boot]$ exit
+exit
+
+Script done on Mon 02 Nov 2015 03:59:39 PM PST

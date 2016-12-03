@@ -1,0 +1,247 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_vets
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-02-05
+     version(): 10.0.16-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select distinct cl.cl_id, cl.cl_name_last, an.an_type
+from a_vets.vt_clients cl
+inner join a_vets.vt_animals an using (cl_id)
+where an.an_dob <= '2009-12-31'
+--------------
+
++-------+--------------+-----------+
+| cl_id | cl_name_last | an_type   |
++-------+--------------+-----------+
+|  3560 | Monk         | bird      |
+|  5699 | Biederbecke  | chelonian |
+|   411 | Carter       | dog       |
+|   411 | Carter       | lizard    |
+|  6897 | Drake        | cat       |
+|  1825 | Harris       | hedgehog  |
++-------+--------------+-----------+
+6 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select de.ex_id, he.ex_date, de.srv_id, de.ex_fee
+from a_vets.vt_exam_details de
+inner join a_vets.vt_exam_headers he using (ex_id)
+inner join a_vets.vt_animals an using (an_id)
+where an.an_type in ('hamster', 'capybara', 'porcupine', 'dormouse')
+order by de.ex_id, de.srv_id
+--------------
+
++-------+---------------------+--------+--------+
+| ex_id | ex_date             | srv_id | ex_fee |
++-------+---------------------+--------+--------+
+|  3105 | 2014-10-10 09:15:00 |    110 | 150.00 |
+|  3105 | 2014-10-10 09:15:00 |    523 |  50.50 |
+|  3203 | 2014-11-03 14:30:00 |    524 |  20.00 |
+|  3321 | 2015-02-17 10:45:00 |    748 |   0.00 |
+|  3322 | 2015-02-10 09:15:00 |    748 |  29.50 |
+|  3323 | 2015-02-25 14:30:00 |    524 |  20.00 |
+|  3323 | 2015-02-25 14:30:00 |    687 |  45.00 |
+|  3393 | 2014-12-23 12:15:00 |    748 |  29.50 |
+|  3393 | 2014-12-23 12:15:00 |    749 |   0.00 |
+|  3486 | 2014-12-31 13:00:00 |   4601 | 275.00 |
+|  4103 | 2015-01-08 15:30:00 |   4601 | 275.00 |
++-------+---------------------+--------+--------+
+11 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select he.stf_id, concat(st.stf_name_first, ' ', st.stf_name_last) as "staff", he.ex_date
+from a_vets.vt_exam_headers he
+inner join a_vets.vt_staff st using (stf_id)
+inner join a_vets.vt_animals an using (an_id)
+where an.an_type not in ('snake', 'chelonian', 'crocodilian', 'lizard')
+order by he.ex_date
+--------------
+
++--------+----------------+---------------------+
+| stf_id | staff          | ex_date             |
++--------+----------------+---------------------+
+|     29 | Sandy Helfen   | 2014-10-10 09:15:00 |
+|     29 | Sandy Helfen   | 2014-11-03 14:30:00 |
+|     15 | Eliza Dolittle | 2014-11-10 10:30:00 |
+|     15 | Eliza Dolittle | 2014-11-22 09:00:00 |
+|     15 | Eliza Dolittle | 2014-11-23 10:30:00 |
+|     15 | Eliza Dolittle | 2014-12-01 16:30:00 |
+|     15 | Eliza Dolittle | 2014-12-23 08:30:00 |
+|     29 | Sandy Helfen   | 2014-12-23 12:15:00 |
+|     15 | Eliza Dolittle | 2014-12-26 09:30:00 |
+|     15 | Eliza Dolittle | 2014-12-31 13:00:00 |
+|     15 | Eliza Dolittle | 2015-01-01 16:30:00 |
+|     38 | Rhoda Wabich   | 2015-01-08 15:30:00 |
+|     38 | Rhoda Wabich   | 2015-01-09 16:30:00 |
+|     29 | Sandy Helfen   | 2015-02-10 09:15:00 |
+|     29 | Sandy Helfen   | 2015-02-17 10:45:00 |
+|     29 | Sandy Helfen   | 2015-02-25 14:30:00 |
++--------+----------------+---------------------+
+16 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select an.cl_id, he.ex_id, he.stf_id, de.srv_id, se.srv_desc, se.srv_list_price, de.ex_fee
+from a_vets.vt_animals an
+inner join a_vets.vt_exam_headers he using (an_id)
+inner join a_vets.vt_exam_details de using (ex_id)
+inner join a_vets.vt_services se using (srv_id)
+where de.ex_fee < se.srv_list_price / 2
+order by he.stf_id, he.ex_id, de.srv_id
+--------------
+
++-------+-------+--------+--------+----------------------+----------------+--------+
+| cl_id | ex_id | stf_id | srv_id | srv_desc             | srv_list_price | ex_fee |
++-------+-------+--------+--------+----------------------+----------------+--------+
+|   411 |  3282 |     15 |    615 | antibiotics          |          78.30 |  25.25 |
+|  1825 |  3413 |     15 |    308 | Followup Exam-Feline |          45.00 |   5.00 |
+|  1825 |  3552 |     15 |    308 | Followup Exam-Feline |          45.00 |   2.25 |
+|  7152 |  3001 |     29 |    104 | Routine Exam-Reptile |          60.00 |  25.00 |
+|  7152 |  3010 |     29 |    104 | Routine Exam-Reptile |          60.00 |  25.00 |
+|  1825 |  3321 |     29 |    748 | Preds-liver          |          29.50 |   0.00 |
+|  7152 |  3325 |     29 |    104 | Routine Exam-Reptile |          60.00 |  25.00 |
+|  1825 |  3393 |     29 |    749 | Preds-chicken        |          29.50 |   0.00 |
+|  7152 |  3409 |     29 |    104 | Routine Exam-Reptile |          60.00 |  25.00 |
++-------+-------+--------+--------+----------------------+----------------+--------+
+9 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select de.ex_id, de.ex_fee, de.ex_desc, se.srv_desc, he.an_id
+from a_vets.vt_exam_details de
+inner join a_vets.vt_services se using (srv_id)
+inner join a_vets.vt_exam_headers he using (ex_id)
+where de.ex_fee between 50.00 and 100.00
+order by se.srv_id, de.ex_fee
+--------------
+
++-------+--------+------------------+---------------------------+-------+
+| ex_id | ex_fee | ex_desc          | srv_desc                  | an_id |
++-------+--------+------------------+---------------------------+-------+
+|  3390 |  70.00 | major buildup    | Dental Cleaning-Canine    | 19845 |
+|  4101 |  60.00 | reg exam         | Routine Exam-Reptile      | 15001 |
+|  4102 |  60.00 | reg exam         | Routine Exam-Reptile      | 15002 |
+|  3390 |  55.00 | yearly checkup   | Routine Exam-Canine       | 19845 |
+|  3104 |  75.00 | moult            | Routine Exam-Bird         | 12035 |
+|  3420 |  80.00 | yearly checkup   | Routine Exam-Feline       | 16003 |
+|  3282 |  50.00 | minor buildup    | Dental Cleaning-Other     | 21001 |
+|  3513 |  75.00 | repeat treatment | Dental Cleaning-Other     | 15401 |
+|  3105 |  50.50 | checkup          | Routine Exam-Small Mammal | 17002 |
+|  3282 |  60.00 | yearly checkup   | Routine Exam-Small Mammal | 21001 |
+|  3612 |  78.00 | Dental           | Feline Dental X_ray       | 16003 |
+|  3325 |  59.00 | dental           | Dental Scaling            | 17026 |
+|  3612 |  57.00 | Dental tooth 2   | Tooth extraction Level 3  | 16003 |
+|  4101 |  75.00 | poss infection   | antibiotics               | 15001 |
+|  3612 |  78.30 | in-patient       | antibiotics               | 16003 |
++-------+--------+------------------+---------------------------+-------+
+15 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+select distinct cl.cl_id, cl.cl_name_last
+from a_vets.vt_clients cl
+inner join a_vets.vt_animals an using (cl_id)
+where an.an_type = 'cat'
+order by cl.cl_id
+--------------
+
++-------+--------------+
+| cl_id | cl_name_last |
++-------+--------------+
+|  1825 | Harris       |
+|  1852 | Dalrymple    |
+|  3560 | Monk         |
+|  6897 | Drake        |
++-------+--------------+
+4 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select distinct cl.cl_id, cl.cl_name_last
+from a_vets.vt_clients cl
+inner join a_vets.vt_animals an using (cl_id)
+where an.an_type != 'cat'
+order by cl.cl_id
+--------------
+
++-------+--------------+
+| cl_id | cl_name_last |
++-------+--------------+
+|   411 | Carter       |
+|  1825 | Harris       |
+|  1852 | Dalrymple    |
+|  3560 | Monk         |
+|  4534 | Montgomery   |
+|  5699 | Biederbecke  |
+|  7152 | Brubeck      |
++-------+--------------+
+7 rows in set (0.00 sec)
+
+--------------
+/*  TASK 08 */
+select distinct cl.cl_id, cl.cl_name_last
+from a_vets.vt_clients cl
+inner join a_vets.vt_animals an using (cl_id)
+where an.an_type in ('hamster', 'capybara', 'porcupine', 'dormouse')
+order by cl.cl_id
+--------------
+
++-------+--------------+
+| cl_id | cl_name_last |
++-------+--------------+
+|  1825 | Harris       |
+|  3560 | Monk         |
+|  5699 | Biederbecke  |
++-------+--------------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+select distinct cl.cl_id, cl.cl_name_last
+from a_vets.vt_clients cl
+inner join a_vets.vt_animals an using (cl_id)
+where an.an_type not in ('hamster', 'capybara', 'porcupine', 'dormouse')
+order by cl.cl_id
+--------------
+
++-------+--------------+
+| cl_id | cl_name_last |
++-------+--------------+
+|   411 | Carter       |
+|  1825 | Harris       |
+|  1852 | Dalrymple    |
+|  3560 | Monk         |
+|  4534 | Montgomery   |
+|  5699 | Biederbecke  |
+|  6897 | Drake        |
+|  7152 | Brubeck      |
++-------+--------------+
+8 rows in set (0.00 sec)
+
+--------------
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

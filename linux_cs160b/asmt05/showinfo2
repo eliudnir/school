@@ -1,0 +1,165 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Mon Dec. 14 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			showinfo2
+#		Inputs/Args: 	 -n -j -e -r -o <file>
+#													
+#		Outputs:	sorted list and/or output file
+#
+# extra credit work
+
+# error output function that also exits (magic) and tells you what you did wrong!
+usageError() {
+	if [[ "$1" = missingArg ]]; 
+	then
+		errAppend="Supply at least one argument!"
+	elif [[ "$1" = tooManyArgs ]]; 
+	then
+		errAppend="Too many arguments supplied!"
+	elif [[ "$1" = fileExists ]];
+	then
+		errAppend="Outfile already exists. Please specify another name."
+	elif [[ "$1" = noWriteFile ]];
+	then
+		errAppend="Can't write to output file!"
+	elif [[ "$1" = missingFile ]];
+	then
+		errAppend="Can't locate the 'sorttest' file:\n$sortTestFileLoc"
+	fi
+
+	echo -e "Error! $errAppend"
+	echo -e "Usage: showinfo2 <options list> outfile"
+	echo -e "Options are:"
+	echo -e "-n (by name) -j (by job) -e (by email) -r (reverse output) "
+	echo -e "and -o <file> (output to a file (will overwrite it!) )"
+	echo -e "Note: expects cs160b 'sorttest' file"
+	echo -e "Example:"
+	echo -e "showinfo2 -nj -r"
+	echo -e "showinfo2 -er -o outfile.out"
+
+	exit 1
+}
+
+# variables we need to make sure are ours (greedy)
+sortTestFileLoc="/pub/cs/pwood/cs160b/samples/Data/sorttest" # where the file should be on the disk at school
+
+# guard and exit against missing sorttest file
+if ! [[ -e "$sortTestFileLoc" ]]; 
+then
+	usageError missingFile
+fi
+
+# then go back to prepping more variables
+catFile=$(awk -F# '{ printf "%s%s%s\n", $2"#", $5"#", $4 }' $sortTestFileLoc) # holds a copy of original input file
+sortOptions=()							# holds all the sort options user inputs
+outFileFlag=false						# bool if we should create outfile or not
+reverseFlag=false						# bool if we are to reverse sort or not
+outFileName=								# holds our outfile filename
+errAppend=									# holds our temporary error message that we append/concat to error
+tmpCount=0									# temporary loop counter
+searchStrategy=""						# our string that we will concatenate to and build up our search strat into
+nameSortString="-k 1,1"			# stub for search strategy
+jobSortString="-k 2,2"			# stub 2 for search strat
+mailSortString="-k 3,3"			# and stub 3
+
+# we error out if we have less than 1 arg 
+if [[ $# -lt 1 ]]; 
+then
+	usageError missingArg
+
+# we also error out if we're seeing more than 6
+elif [[ $# -gt 6 ]];
+then
+	usageError tooManyArgs
+fi
+
+# here we handle the arguments using a while loop and getopts
+# -o will require an additional argument as indicated by :
+while getopts njero: OPT; 
+do
+	# for each of the arguments n, j and e we add the argumentto the list
+	# and move on
+	case "$OPT" in
+		n) 
+			sortOptions=("$sortOptions$OPT")
+			;;
+		j)
+			sortOptions=("$sortOptions$OPT")
+			;;
+		e)
+			sortOptions=("$sortOptions$OPT")
+			;;
+	# for r we flip the reverseFlag bool and for o we detect file existance of
+	# the following arg and exit if it is, else we set the variables
+		r)
+			reverseFlag=true
+			;;
+		o)
+			if [[ -f "$OPTARG" && -w "$OPTARG" ]] || ! [[ -e "$OPTARG" ]];
+			then
+				outFileFlag=true
+				outFileName="$OPTARG"
+				$(touch "$outFileName" || usageError noWriteFile)
+			else 
+				usageError noWriteFile
+			fi
+			;;
+	# for whatever else trash we detect
+		\?)
+			usageError
+			;;
+
+	esac
+done
+
+# then we clear out args using shift n 
+shift $((OPTIND-1))
+
+# and after we clear out we make sure we're not left with any mess
+if [[ $# -gt 0 ]];
+then
+	usageError tooManyArgs
+fi
+
+# here we loop to build our search strategy string for sort
+# this is basically to get around order of arguments and make 
+# sure that their order actually matters in the sort output result
+while [[ "$tmpCount" -lt "${#sortOptions}" ]]; 
+do
+	# each iteration we test for a valid character that will determine 
+	# output order and then concatenate the strategy string appropriately
+	# if we get a match
+	if [[ "${sortOptions:((tmpCount)):1}" = n ]]; 
+	then
+		searchStrategy="$searchStrategy$nameSortString "
+
+	elif [[ "${sortOptions:((tmpCount)):1}" = j ]]; 
+	then
+		searchStrategy="$searchStrategy$jobSortString "
+
+	elif [[ "${sortOptions:((tmpCount)):1}" = e ]]; 
+	then
+		searchStrategy="$searchStrategy$mailSortString "
+	fi
+
+	((tmpCount += 1))
+done
+
+# then we add the reverse flag to the strategy string if it's on
+if [[ "$reverseFlag" = true ]]; 
+then
+	searchStrategy="$searchStrategy-r "
+fi
+
+# then we either (over)write to the outfile (using awk to clean it all up for output)
+if [[ "$outFileFlag" = true ]]; 
+then
+	echo -e "$catFile" | sort -dbfi -t# $searchStrategy | awk -F# '{ printf "%-20s%-22s%-20s\n", $1, $2, $3 }' > $outFileName
+
+# or print out our output
+else
+	echo -e "$catFile" | sort -dbfi -t# $searchStrategy | awk -F# '{ printf "%-20s%-22s%-20s\n", $1, $2, $3 }'
+fi

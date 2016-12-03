@@ -1,0 +1,143 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sun Nov. 8 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			chk2
+#		Inputs/Args: 	 
+#			First Argument:			-f or -u
+#			Second Argument:	  - a valid file path in case of first argument = -f
+#													- a valid user in case of first argument = -u
+#		Outputs:
+#			If either of input args are invalid: Error message
+#			If first input argument is -f:
+#					- Error if argument 2 is invalid path/file
+#					- Message that file is symlink, file or directory, whatever the case
+#					- If argument 2 is valid file or directory path:
+#							- Printout of permissions for this proc
+#			If first input argument is -u:
+#					- Error if argument 2 is not valid user on system
+#					- If argment 2 is a user, you get to see their home dir
+#					- If user is logged in or not, and last login if not logged on currently
+# NOTE:
+# SAME AS FILE "chk" except with outer "case" to qualify for EXTRA CREDIT assignment
+
+# same error message stored to a variable as before
+chk2error="chk2: ERROR! 
+chk2 takes two (valid) arguments! 
+
+Usage: 	chk2 { -f FILEPATH | -u USER }
+ex1: 	chk2 -f /home/batman/cave.slime
+ex2: 	chk2 -u tbundy"
+
+# we still use a small if-block to test for 2 parameters only at exec
+if [ "$#" -ne 2 ]
+then 
+	echo "$chk2error"
+	exit 1
+fi
+
+# We use a case to handle the first argument -f or -u
+case "$1" in
+	"-f") 
+		
+		# then we go into if/elif/else branching to handle and detect
+		# the second argument given - here we test for existance of the
+		# argument file) and exit(1) if it's not present
+		if [ ! -e "$2" ]
+		then 
+			echo "Error not a valid FILE / PATH!"
+			exit 1
+		
+		# if the file is present
+		else
+
+			# Then we check if it's a symlink
+			if [ -L "$2" ]
+			then 
+				echo "Is a SYMLINK!"
+				exit 0
+			fi
+
+			# then we test with if/elif/else and print out
+			# if it's a directory
+			if [ -d "$2" ]
+			then
+				echo "Is a DIRECTORY!"
+			
+			# or if it's a file
+			elif [ -f "$2" ]
+			then
+				echo "Is a FILE!"
+
+			# else we know that the file exists but isn't a regular type
+			else
+				echo "Exists but is not a known type!"
+			fi
+
+			# here we line up three if tests and just print out the 
+			# result if any of them are true - user will get to know
+			# the permission status of the argument they queried for
+			# readable status
+			if [ -r "$2" ]
+			then
+				echo "It is readable by the process"
+			fi
+
+			# writable status
+			if [ -w "$2" ]
+			then
+				echo "It is writable by the process"
+			fi
+
+			# executable status
+			if [ -x "$2" ]
+			then
+				echo "It is executable"
+			fi
+			exit 0
+		fi
+		;;
+
+	# then we have to handle the case for argument option -u
+	# instead
+	"-u")
+		
+		# after detecting the -u option we set up a few if/elif/else blocks
+		# to handle the second argument input for -u
+		# first we detect if this is a valid user on the system
+		if $(cat /etc/passwd | grep "^$2:" > /dev/null)
+			then
+				# then we echo out that fact and the location of their home directory
+				echo "$2 is a user on this system and"
+				echo "$(cat /etc/passwd | grep "^$2:" | cut -d: -f6) is their home directory"
+
+					# then we check the exit status of grep on argument two and 
+					# indicate whether or not the user we queried for is logged on currently
+					# or not
+					if $(who | grep "^$2 " > /dev/null)
+					then
+						echo "$2 is logged on right now"
+						exit 0
+					
+					# this would be the "or not" part of the above comment
+					# where we also display their last time logged on (if they're not
+					# currently logged in)
+					else
+						echo "$2 is not logged on right now, but their last login was:"
+						echo "$(last -1 $2 | grep "^$2 " | tr -s " " | cut -d" " -f4-7)"
+						exit 0
+					fi
+
+			# if exit status of the previous if/grep command didn't find anything, we 
+			# print informative error and exit(1)
+			else
+				echo "The USER "$2" does not exist on this system"
+				exit 1
+			fi	
+		;;
+
+	# and then we have a *) catch and print an error if arguments given are bad
+	*) echo "$chk2error";;
+esac

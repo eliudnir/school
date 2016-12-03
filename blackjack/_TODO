@@ -1,0 +1,11 @@
+TODO:
+
+-Deck needs:
+  - A reset (basically the init/constructor)
+  - operator overloading for adding two decks together
+
+- we're gonna want the full rules, bets and propotions/chances output as well....
+  -- woo @ that.
+
+--later if time;
+flesh out about screen to include statistics read and updated from a file

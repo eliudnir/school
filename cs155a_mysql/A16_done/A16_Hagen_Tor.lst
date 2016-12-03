@@ -1,0 +1,262 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-05-11
+     version(): 10.0.17-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select id,
+extractValue(an_data, '/client/cl_name') as "Client",
+cast(extractValue(an_data, '/client/@cl_id') as int) as "ClientID"
+from a_testbed.xml_animals
+order by ClientID
+--------------
+
++-----+-----------+----------+
+| id  | Client    | ClientID |
++-----+-----------+----------+
+| 102 | Jake      |      891 |
+| 100 | Anna      |     1007 |
+| 103 | Cathy     |     1008 |
+| 104 | Debby     |     1009 |
+| 105 | Elise     |     1011 |
+| 101 | Betty     |     1077 |
+| 106 | Fran      |     1300 |
+| 107 | Quentin   |     1400 |
+| 109 | Jerome    |     1892 |
+| 114 | Max       |     2313 |
+| 110 | Julia     |     2893 |
+| 115 | Archy     |     3314 |
+| 116 | Mehitabel |     3316 |
+| 108 | Helena    |     5289 |
+| 113 | Josie     |     8099 |
+| 112 | Jospehina |     8905 |
+| 111 | Jennifer  |     8945 |
++-----+-----------+----------+
+17 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select id,
+extractValue(an_data, '/client/pets/animal/an_id') as "AnimalID",
+extractValue(an_data, '/client/pets/animal/an_type') as "TypeOfAnimal",
+extractValue(an_data, '/client/pets/animal/an_name') as "Name",
+extractValue(an_data, '/client/pets/animal/an_price') as "Price"
+from a_testbed.xml_animals
+order by AnimalID
+--------------
+
++-----+-------------------------------+-------------------------------------------+--------------------------------------------+------------------------+
+| id  | AnimalID                      | TypeOfAnimal                              | Name                                       | Price                  |
++-----+-------------------------------+-------------------------------------------+--------------------------------------------+------------------------+
+| 112 |                               |                                           |                                            |                        |
+| 102 | 1                             | bird                                      | Anne Bob Carol                             | 250                    |
+| 100 | 1001                          | bird                                      |                                            | 1250                   |
+| 101 | 1011                          | bird                                      |                                            | 1250                   |
+| 103 | 1021                          | bird                                      | Mimer                                      |                        |
+| 104 | 1041                          | catbird                                   | Mimer                                      | 75                     |
+| 105 | 1051 1052 1053 1054 1055 1056 | elephant elephant zebra zebra zebra zebra | Yeller Screamer Strip Stripe Striper Slats | 75 750 750 750 750 750 |
+| 106 | 1061                          | caterpillar                               | bird                                       | 250                    |
+| 107 | 1071 1072 1073 1074           | spider monkey spider monkey spider monkey | Mink Monk Taran Boxer                      | 75 250 18.75 2500      |
+| 108 | 1081 1082                     | elephant bird                             | Yeller Screamer                            | 250 350                |
+| 113 | 14 15 16 24 25 29             | cat cat cat cat bird cat                  | Abigail Fluffy Abigail finally Fluffy      | 75 75 75 75 75 75      |
+| 116 | 1991                          | cat face spider                           | Archibald                                  | 275                    |
+| 115 | 1992                          | chipmunk                                  | scaterrer                                  | 275                    |
+| 114 | 1993 1303 3301                | catfish dog bird                          | Archibald cat scatterbrain                 | 275 250 275            |
+| 109 | 2 3                           | bird bird                                 | Arnold Archie Betty                        | 75 75                  |
+| 110 | 4 5 6 63                      | bird bird cat cat                         | Abigail Fluffy Fluffy                      | 250 250 75 75          |
+| 111 | 7                             | cat                                       | Mittens                                    | 75                     |
++-----+-------------------------------+-------------------------------------------+--------------------------------------------+------------------------+
+17 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select extractValue(an_data, '/client/cl_name') as "ClientName",
+extractValue(an_data, '/client/@cl_id') as "ClientID"
+from a_testbed.xml_animals
+where extractValue(an_data, 'count(/client/pets/animal[an_type="cat"])') > 0
+--------------
+
++------------+----------+
+| ClientName | ClientID |
++------------+----------+
+| Julia      | 2893     |
+| Jennifer   | 8945     |
+| Josie      | 8099     |
++------------+----------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID",
+extractValue(an_data, 'count(/client/pets/animal/an_id)') as "NumberOfAnimals"
+from a_testbed.xml_animals
+order by NumberOfAnimals desc
+--------------
+
++-----------+----------+-----------------+
+| Client    | ClientID | NumberOfAnimals |
++-----------+----------+-----------------+
+| Elise     | 1011     | 6               |
+| Josie     | 8099     | 6               |
+| Quentin   | 1400     | 4               |
+| Julia     | 2893     | 4               |
+| Max       | 2313     | 3               |
+| Helena    | 5289     | 2               |
+| Jerome    | 1892     | 2               |
+| Anna      | 1007     | 1               |
+| Betty     | 1077     | 1               |
+| Jake      | 891      | 1               |
+| Cathy     | 1008     | 1               |
+| Debby     | 1009     | 1               |
+| Fran      | 1300     | 1               |
+| Jennifer  | 8945     | 1               |
+| Archy     | 3314     | 1               |
+| Mehitabel | 3316     | 1               |
+| Jospehina | 8905     | 0               |
++-----------+----------+-----------------+
+17 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID",
+if(extractValue(an_data, 'count(/client/pets/animal/an_id)') > 0,
+  if(length(extractValue(an_data, '/client/pets/animal[1]/an_name')) > 0,
+    concat(extractValue(an_data, '/client/pets/animal[1]/an_type'), " named ",
+    extractValue(an_data, '/client/pets/animal[1]/an_name')),
+  concat(extractValue(an_data, '/client/pets/animal[1]/an_type'), " named ",
+  "(No name provided)")), "This client has no animals") as "Animal_First"
+from a_testbed.xml_animals
+--------------
+
++-----------+----------+---------------------------------+
+| Client    | ClientID | Animal_First                    |
++-----------+----------+---------------------------------+
+| Anna      | 1007     | bird named (No name provided)   |
+| Betty     | 1077     | bird named (No name provided)   |
+| Jake      | 891      | bird named Anne Bob Carol       |
+| Cathy     | 1008     | bird named Mimer                |
+| Debby     | 1009     | catbird named Mimer             |
+| Elise     | 1011     | elephant named Yeller           |
+| Fran      | 1300     | caterpillar named bird          |
+| Quentin   | 1400     | spider monkey named Mink        |
+| Helena    | 5289     | elephant named Yeller           |
+| Jerome    | 1892     | bird named Arnold               |
+| Julia     | 2893     | bird named Abigail              |
+| Jennifer  | 8945     | cat named Mittens               |
+| Jospehina | 8905     | This client has no animals      |
+| Josie     | 8099     | cat named Abigail               |
+| Max       | 2313     | catfish named Archibald         |
+| Archy     | 3314     | chipmunk named scaterrer        |
+| Mehitabel | 3316     | cat face spider named Archibald |
++-----------+----------+---------------------------------+
+17 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID",
+if(length(extractValue(an_data, '/client/pets/animal[1]/an_name')) > 0,
+	concat(extractValue(an_data, '/client/pets/animal[1]/an_type'), " named ",
+  if(extractValue(an_data, 'count(/client/pets/animal[1]/an_name)') > 1,
+    extractValue(an_data, '/client/pets/animal[1]/an_name[last()]'),
+    extractValue(an_data, '/client/pets/animal[1]/an_name'))),
+  concat(extractValue(an_data, '/client/pets/animal[1]/an_type'), " with no name"))
+  as "Animal_First"
+from a_testbed.xml_animals
+where extractValue(an_data, 'count(/client/pets/animal/an_id)') > 0
+--------------
+
++-----------+----------+---------------------------------+
+| Client    | ClientID | Animal_First                    |
++-----------+----------+---------------------------------+
+| Anna      | 1007     | bird with no name               |
+| Betty     | 1077     | bird with no name               |
+| Jake      | 891      | bird named Carol                |
+| Cathy     | 1008     | bird named Mimer                |
+| Debby     | 1009     | catbird named Mimer             |
+| Elise     | 1011     | elephant named Yeller           |
+| Fran      | 1300     | caterpillar named bird          |
+| Quentin   | 1400     | spider monkey named Mink        |
+| Helena    | 5289     | elephant named Yeller           |
+| Jerome    | 1892     | bird named Arnold               |
+| Julia     | 2893     | bird named Abigail              |
+| Jennifer  | 8945     | cat named Mittens               |
+| Josie     | 8099     | cat named Abigail               |
+| Max       | 2313     | catfish named Archibald         |
+| Archy     | 3314     | chipmunk named scaterrer        |
+| Mehitabel | 3316     | cat face spider named Archibald |
++-----------+----------+---------------------------------+
+16 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID"
+from a_testbed.xml_animals
+where extractValue(an_data, '/client/pets/animal[1]/an_type') != ""
+and extractValue(an_data, '/client/pets/animal[2]/an_type') != ""
+and extractValue(an_data, '/client/pets/animal[4]/an_type') = ""
+--------------
+
++--------+----------+
+| Client | ClientID |
++--------+----------+
+| Helena | 5289     |
+| Jerome | 1892     |
+| Max    | 2313     |
++--------+----------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 08 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID"
+from a_testbed.xml_animals
+where extractValue(an_data, 'count(/client/pets/animal/an_type[self:text()="bird"]/../an_price[self:text()=250])') > 0
+--------------
+
++--------+----------+
+| Client | ClientID |
++--------+----------+
+| Jake   | 891      |
+| Julia  | 2893     |
++--------+----------+
+2 rows in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+select extractValue(an_data, '/client/cl_name') as "Client",
+extractValue(an_data, '/client/@cl_id') as "ClientID"
+from a_testbed.xml_animals
+where extractValue(an_data, 'count(/client/pets/animal/an_type[self:text()="bird"]/../an_price[self:text()=250])') > 0
+and extractValue(an_data, 'count(/client/pets/animal/an_type[self:text()="cat"])') > 1
+--------------
+
++--------+----------+
+| Client | ClientID |
++--------+----------+
+| Julia  | 2893     |
++--------+----------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

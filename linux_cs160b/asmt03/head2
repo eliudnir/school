@@ -1,0 +1,113 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sat Nov. 21 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			head[n]
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+#		Restrictions: 				No getopts
+
+# First we store a standard usage error output to a varible
+usageerror="usage: head2 [ -p limit ] inputfile
+[ -p limit ]: prints first 'limit' (a number) lines of file (optional)
+inputfile: the input file to to print out"
+
+# a matching expression we'll use to make sure second argument (if -p is given)
+# is a number (positive integer) in the user input 
+matchnum='^[0-9]+$'
+
+# here we set up some default values that we will override if the user supplies
+# valid arguments when running the program
+inputfile=""
+linestoprint=10
+
+# Using a case to manage the arguments and inputs from the user
+case "$#" in
+	# If three arguments are given we enter here
+	3 )
+		# Then we run through an if/elif/fi series to make sure the inputs are 
+		# valid actions and the file exists and so on
+		if [ ! -e "$3" ] || [ ! -r "$3" ];
+		then
+			echo -e "ERROR: File doesn't exist or can't be read! \n"
+			echo "$usageerror"
+			exit 1
+
+		# test and make sure our second argument (in case of 3 given) is a number
+		elif ! [[ $2 =~ $matchnum ]] ; 
+		then
+			echo -e "ERROR: limit must be a number! \n"
+			echo "$usageerror"
+			exit 1
+
+		# and equally important make sure that the first argument given (in case of 3)
+		# is correct as -p and not something else
+		elif ! [[ $1 = '-p' ]] ;
+		then
+			echo -e "ERROR: valid argument is -p only! \n"
+			echo "$usageerror"
+			exit 1
+		fi
+
+		# if we get here we know we have 3 good arguments, and can safely override 
+		# the default variables to change the behaviour of the code that runs after
+		# the outer case/esac expression
+		inputfile=$3
+		linestoprint=$2 
+		;;
+
+	# If two arguments are given it is always going to be an error in this case
+	# so we just give our stored usageerror and exit
+	2 )
+		echo "$usageerror"
+		exit 1
+		;;
+
+	# One argument means it's just an input file
+	1 )
+		# so we test the input file validity and go on with the job if that is OK
+		if [ ! -e "$1" ] || [ ! -r "$1" ];
+		then
+			echo -e "ERROR: File doesn't exist or can't be read! \n"
+			echo "$usageerror"
+			exit 1
+		fi
+
+		# if we end up here, we know that we have one argument and that it's "good"
+		# so we can safely override the inputfile variable and let the code outside of this
+		# case/esac run using default linestoprint and our new inputfile value
+		inputfile=$1
+		;;
+
+	# any other number of inputs isn't what we want so this catch-all will work 
+	# to print error in those cases.
+	*)
+		echo "$usageerror"
+		exit 1
+		;;
+esac
+
+# At this point we have dealt with the users argument and input files in a good way 
+# and are ready to 'head' out the file the user requested to see (with the values
+# defined by default or overriden by user arguments)
+while read line || [[ -n $line ]] ; 
+do
+
+	# if our linestoprint counter has been decreased too much we test for that here and 
+	# exit so we don't run on and print the whole file
+	if [ $linestoprint -lt 1 ]
+	then
+		break;
+	fi
+	
+	# Then we print our line out and, using arithmetic expansion here we decrease our 
+	# linestoprint variable by one each time we have completed a loop and printed a line
+	#echo "$linestoprint"
+	echo "$line"
+	((linestoprint -= 1))
+
+done < $inputfile

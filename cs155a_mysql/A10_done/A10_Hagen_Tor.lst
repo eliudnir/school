@@ -1,0 +1,264 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_bkorders
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-03-26
+     version(): 10.0.17-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+drop view if exists a_bkorders.OrdersPriorYear
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+create view a_bkorders.OrdersPriorYear as (
+  select distinct CU.cust_id as c_id,
+  concat_ws(", ", CU.cust_name_last, CU.cust_name_first) as c_name,
+  cast(OH.order_date as date) as c_orderdate
+  from a_bkorders.customers CU
+  join a_bkorders.order_headers OH using (cust_id)
+  where year(order_date) = year(current_date()) -1
+  order by order_date
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+/*  TASK 02 */
+select c_id, c_name
+from a_bkorders.OrdersPriorYear
+where month(c_orderdate) = 3
+union
+select c_id, c_name
+from a_bkorders.OrdersPriorYear
+where month(c_orderdate) = 6
+union
+select c_id, c_name
+from a_bkorders.OrdersPriorYear
+where month(c_orderdate) = 9
+--------------
+
++--------+----------------------+
+| c_id   | c_name               |
++--------+----------------------+
+| 267780 | Shelly, Mary         |
+| 272787 | Carlson, Ben         |
+| 234138 | Keats, John          |
+| 276381 | Collins, Douglas     |
+| 282716 | Biederbecke, Dwight  |
+| 261502 | Hawthorne, Nathaniel |
+| 200368 | Blake, William       |
+| 218709 | Bonnard, Paul        |
+| 226656 | Randall, Randell     |
+| 259906 | Capybara, Wile E.    |
+| 227105 | Kafka, Franz         |
+| 221297 | Dodgson, Charles     |
+| 290298 | Swift, Jonathan      |
+| 222477 | Rossetti, Christina  |
+| 263119 | Jones                |
+| 299099 | Sam, Dave            |
+| 259969 | Carlsen, Benny       |
+| 212921 | Books on Tap         |
+| 211483 | Carroll, Lewis       |
+| 258595 | Jobs, Peter          |
+| 296598 | Collins, Douglas     |
+| 217796 | Anders               |
+| 260368 | Muller, Jonathan     |
+| 239427 | Marksa, Anna         |
+| 272611 | Jarrett, Keith       |
++--------+----------------------+
+25 rows in set (0.02 sec)
+
+--------------
+/*  TASK 03 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id not in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) in (3, 6, 9)
+)
+--------------
+
++--------+------------------+
+| c_id   | c_name           |
++--------+------------------+
+| 224038 | Austin, Pat      |
+| 228175 | Cardin, Benjamin |
++--------+------------------+
+2 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 3
+)
+and c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 6
+)
+and c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 9
+)
+--------------
+
++--------+----------------------+
+| c_id   | c_name               |
++--------+----------------------+
+| 272787 | Carlson, Ben         |
+| 261502 | Hawthorne, Nathaniel |
++--------+----------------------+
+2 rows in set (0.01 sec)
+
+--------------
+/*  TASK 05 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 1
+)
+and c_id not in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) in (2, 3)
+)
+--------------
+
++--------+-------------------+
+| c_id   | c_name            |
++--------+-------------------+
+| 226656 | Randall, Randell  |
+| 259906 | Capybara, Wile E. |
++--------+-------------------+
+2 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 3
+)
+and c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) in (4, 5)
+)
+--------------
+
++--------+------------------+
+| c_id   | c_name           |
++--------+------------------+
+| 272787 | Carlson, Ben     |
+| 234138 | Keats, John      |
+| 276381 | Collins, Douglas |
++--------+------------------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 1
+)
+and c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 2
+  or month(c_orderdate) = 3
+)
+and c_id not in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where c_id in (
+    select c_id
+    from a_bkorders.OrdersPriorYear
+    where month(c_orderdate) = 2
+  )
+  and c_id in (
+    select c_id
+    from a_bkorders.OrdersPriorYear
+    where month(c_orderdate) = 3
+  )
+)
+--------------
+
++--------+---------------------+
+| c_id   | c_name              |
++--------+---------------------+
+| 221297 | Dodgson, Charles    |
+| 290298 | Swift, Jonathan     |
+| 222477 | Rossetti, Christina |
+| 267780 | Shelly, Mary        |
++--------+---------------------+
+4 rows in set (0.01 sec)
+
+--------------
+/*  TASK 08 */
+select distinct c_id, c_name
+from a_bkorders.OrdersPriorYear
+where c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 4
+)
+and c_id in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 5
+)
+and c_id not in (
+  select c_id
+  from a_bkorders.OrdersPriorYear
+  where month(c_orderdate) = 6
+)
+--------------
+
++--------+--------------+
+| c_id   | c_name       |
++--------+--------------+
+| 212921 | Books on Tap |
++--------+--------------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

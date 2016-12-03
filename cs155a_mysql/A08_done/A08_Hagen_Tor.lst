@@ -1,0 +1,141 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_plants
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-03-09
+     version(): 10.0.16-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select CU.cust_id, CU.cust_name_last
+from a_plants.customers CU
+join a_plants.order_headers OH using (cust_id)
+where year(OH.order_date) in ('1995', '2010', '2012')
+--------------
+
+Empty set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select OH.cust_id, OH.order_date,
+  case
+    when datediff(current_date(), OH.order_date) < 14 then "less than 14 days"
+    when datediff(current_date(), OH.order_date) < 30 then "less than 30 days"
+    when datediff(current_date(), OH.order_date) < 90 then "less than 90 days"
+    when datediff(current_date(), OH.order_date) < 180 then "less than 180 days"
+    else "180 days or more"
+  end as orderAge
+from order_headers OH
+order by OH.cust_id, OH.order_date desc
+--------------
+
++---------+------------+-------------------+
+| cust_id | order_date | orderAge          |
++---------+------------+-------------------+
+|    3009 | 2015-02-01 | less than 90 days |
+|    3009 | 2015-01-31 | less than 90 days |
+|    3009 | 2014-09-03 | 180 days or more  |
+|    3010 | 2014-06-30 | 180 days or more  |
+|    3012 | 2015-02-10 | less than 30 days |
+|    3012 | 2014-08-03 | 180 days or more  |
+|    3012 | 2014-08-02 | 180 days or more  |
+|    3012 | 2014-08-01 | 180 days or more  |
+|    3012 | 2014-07-22 | 180 days or more  |
++---------+------------+-------------------+
+9 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select OH.cust_id, OH.order_id, OH.order_date
+from a_plants.order_headers OH
+where OH.order_date = last_day(OH.order_date)
+--------------
+
++---------+----------+------------+
+| cust_id | order_id | order_date |
++---------+----------+------------+
+|    3010 |     5101 | 2014-06-30 |
+|    3009 |     5102 | 2015-01-31 |
++---------+----------+------------+
+2 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select PT.plant_id,
+concat_ws(" ", PT.genus, PT.species) as "scientific name"
+from a_plants.plant_taxonomy PT
+join (
+  select distinct plant_id
+  from a_plants.order_headers
+  join a_plants.order_details
+  where monthname(order_headers.order_date) in ("September", "October")
+) orders_table on PT.plant_id = orders_table.plant_id
+--------------
+
++----------+--------------------------+
+| plant_id | scientific name          |
++----------+--------------------------+
+|     1004 | Anemone nemorosa         |
+|     2023 | Cirsium perplexans       |
+|     1010 | Eschscholzia californica |
+|     1001 | Primula veris            |
+|     1002 | Ranunculus acris         |
+|     1009 | Ranunuculus sceleratus   |
++----------+--------------------------+
+6 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+set @last_day_of_month := last_day(current_date())
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select OH.cust_id, CU.cust_name_last, OH.order_date
+from a_plants.order_headers OH
+join a_plants.customers CU using (cust_id)
+where OH.order_date between date_add(date_sub(@last_day_of_month, interval 7 month), interval 1 day)
+and date_sub(@last_day_of_month, interval 1 month)
+--------------
+
++---------+----------------+------------+
+| cust_id | cust_name_last | order_date |
++---------+----------------+------------+
+|    3009 | Peterson       | 2015-01-31 |
+|    3009 | Peterson       | 2015-02-01 |
+|    3012 | Hawkins        | 2015-02-10 |
+|    3009 | Peterson       | 2014-09-03 |
++---------+----------------+------------+
+4 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+
+/*  TASK 07 */
+
+/*  TASK 08 */
+
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

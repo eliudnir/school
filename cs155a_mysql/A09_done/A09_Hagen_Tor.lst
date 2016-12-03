@@ -1,0 +1,309 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-03-19
+     version(): 10.0.16-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select sum(OD.quantity * OD.order_price) as AmtDue
+from a_bkorders.order_details OD
+where OD.book_id = 1894
+--------------
+
++--------+
+| AmtDue |
++--------+
+| 844.48 |
++--------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+set @curyear := year(current_date())
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select @curyear
+--------------
+
++----------+
+| @curyear |
++----------+
+|     2015 |
++----------+
+1 row in set (0.00 sec)
+
+--------------
+select count(distinct order_id) as NumberOfOrders
+from a_bkorders.order_headers OH
+join a_bkorders.order_details OD using (order_id)
+where OD.book_id = 1894
+and year(OH.order_date) = @curyear -1
+--------------
+
++----------------+
+| NumberOfOrders |
++----------------+
+|              4 |
++----------------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select CU.cust_id as CustID,
+CU.cust_name_last as CustName,
+sum(OD.quantity) as BookTotal,
+case
+  when year(OH.order_date) = year(current_date()) then sum(OD.quantity)
+else null
+end as CurrentYearBookTotal
+from a_bkorders.customers CU
+left join a_bkorders.order_headers OH using (cust_id)
+left join a_bkorders.order_details OD using (order_id)
+group by CU.cust_id
+--------------
+
++--------+--------------+-----------+----------------------+
+| CustID | CustName     | BookTotal | CurrentYearBookTotal |
++--------+--------------+-----------+----------------------+
+| 200368 | Blake        |       861 |                  861 |
+| 202958 | Denver       |      NULL |                 NULL |
+| 208950 | Adams        |        10 |                   10 |
+| 211483 | Carroll      |       102 |                 NULL |
+| 212921 | Books on Tap |       153 |                  153 |
+| 217002 | Grieg        |      NULL |                 NULL |
+| 217796 | Anders       |       254 |                  254 |
+| 218709 | Bonnard      |       327 |                  327 |
+| 221297 | Dodgson      |        65 |                   65 |
+| 222477 | Rossetti     |       137 |                  137 |
+| 224038 | Austin       |       111 |                  111 |
+| 226275 | Dalrymple    |      NULL |                 NULL |
+| 226656 | Randall      |       291 |                 NULL |
+| 227105 | Kafka        |      2458 |                 NULL |
+| 228175 | Cardin       |         9 |                 NULL |
+| 228275 | Mikulski     |      NULL |                 NULL |
+| 228352 | Edwards      |      NULL |                 NULL |
+| 234138 | Keats        |       191 |                  191 |
+| 234709 | Brahms       |        69 |                   69 |
+| 239427 | Marksa       |       402 |                 NULL |
+| 255919 | Milton       |      NULL |                 NULL |
+| 258595 | Jobs         |         4 |                 NULL |
+| 259906 | Capybara     |       746 |                 NULL |
+| 259907 | Hedge        |      NULL |                 NULL |
+| 259969 | Carlsen      |        16 |                 NULL |
+| 260368 | Muller       |        16 |                   16 |
+| 261502 | Hawthorne    |       890 |                  890 |
+| 263119 | Jones        |       606 |                  606 |
+| 267780 | Shelly       |       476 |                 NULL |
+| 272611 | Jarrett      |        15 |                   15 |
+| 272787 | Carlson      |       606 |                  606 |
+| 276381 | Collins      |       205 |                  205 |
+| 282716 | Biederbecke  |      1106 |                 NULL |
+| 287261 | Biederbecke  |      NULL |                 NULL |
+| 290298 | Swift        |       704 |                  704 |
+| 296598 | Collins      |         2 |                 NULL |
+| 299099 | Sam          |       351 |                 NULL |
++--------+--------------+-----------+----------------------+
+37 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+set @lastQtr := if(( quarter( current_date() ) -1) = 0, 4, quarter( current_date() ) -1)
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+set @lastQtrYr := if( @lastQtr = 4, year( current_date() ) -1, year( current_date() ))
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select @lastQtr, @lastQtrYr
+--------------
+
++----------+------------+
+| @lastQtr | @lastQtrYr |
++----------+------------+
+|        4 |       2014 |
++----------+------------+
+1 row in set (0.00 sec)
+
+--------------
+select count(OH.order_id) as NumOfOrdersPrevQuarter,
+  count(distinct OH.cust_id) as CustWithOrdersPrevQuart
+from a_bkorders.order_headers OH
+where quarter(OH.order_date) = @lastQtr and
+year(OH.order_date) = @lastQtrYr
+--------------
+
++------------------------+-------------------------+
+| NumOfOrdersPrevQuarter | CustWithOrdersPrevQuart |
++------------------------+-------------------------+
+|                     33 |                      10 |
++------------------------+-------------------------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select book_id, title
+from a_bkorders.order_details OD
+join a_bkinfo.books BO using (book_id)
+join a_bkinfo.book_topics BT using (book_id)
+where BT.topic_id in ('FCT', 'POE')
+group by book_id
+having count(*) = (
+  select max(topicOrders.BookOrderCount)
+  from (
+    select count(*) as BookOrderCount
+    from a_bkorders.order_details OD
+    join a_bkinfo.books BO using (book_id)
+    join a_bkinfo.book_topics BT using (book_id)
+    where BT.topic_id in ('FCT', 'POE')
+    group by book_id
+  ) topicOrders
+)
+--------------
+
++---------+----------------+
+| book_id | title          |
++---------+----------------+
+|    1103 | Selected Poems |
++---------+----------------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+select
+  count(case when BT.topic_id in ('CMP') then BO.book_id else null end) as "Computer Science",
+  count(case when BT.topic_id in ('DB', 'SQL', 'SSRV', 'MySQL', 'ORA', 'ADO') then BO.book_id else null end) as "Database Systems",
+  count(case when BT.topic_id in ('NOSQL', 'XML', 'DB') then BO.book_id else null end) as "Data Storage Techniques",
+  count(*) as "All Books"
+from a_bkinfo.books BO
+join a_bkinfo.book_topics BT using (book_id)
+--------------
+
++------------------+------------------+-------------------------+-----------+
+| Computer Science | Database Systems | Data Storage Techniques | All Books |
++------------------+------------------+-------------------------+-----------+
+|                0 |               66 |                      12 |       135 |
++------------------+------------------+-------------------------+-----------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select CU.cust_id as CustID, CU.cust_name_last as CustName,
+case
+  when OH.order_date IS NOT NULL then max(order_date)
+  else 'No orders'
+end MostRecentOrder
+from a_bkorders.order_details OD
+join a_bkorders.order_headers OH using (order_id)
+right join a_bkorders.customers CU using (cust_id)
+group by CU.cust_id
+--------------
+
++--------+--------------+-----------------+
+| CustID | CustName     | MostRecentOrder |
++--------+--------------+-----------------+
+| 200368 | Blake        | 2015-03-15      |
+| 202958 | Denver       | No orders       |
+| 208950 | Adams        | 2015-03-28      |
+| 211483 | Carroll      | 2014-11-24      |
+| 212921 | Books on Tap | 2015-03-22      |
+| 217002 | Grieg        | No orders       |
+| 217796 | Anders       | 2015-03-29      |
+| 218709 | Bonnard      | 2015-03-25      |
+| 221297 | Dodgson      | 2015-03-22      |
+| 222477 | Rossetti     | 2015-03-21      |
+| 224038 | Austin       | 2015-03-23      |
+| 226275 | Dalrymple    | No orders       |
+| 226656 | Randall      | 2014-08-25      |
+| 227105 | Kafka        | 2015-03-27      |
+| 228175 | Cardin       | 2014-05-06      |
+| 228275 | Mikulski     | No orders       |
+| 228352 | Edwards      | No orders       |
+| 234138 | Keats        | 2015-03-18      |
+| 234709 | Brahms       | 2015-03-22      |
+| 239427 | Marksa       | 2015-03-31      |
+| 255919 | Milton       | No orders       |
+| 258595 | Jobs         | 2014-09-20      |
+| 259906 | Capybara     | 2014-08-27      |
+| 259907 | Hedge        | No orders       |
+| 259969 | Carlsen      | 2015-01-08      |
+| 260368 | Muller       | 2015-03-05      |
+| 261502 | Hawthorne    | 2015-03-30      |
+| 263119 | Jones        | 2015-03-28      |
+| 267780 | Shelly       | 2015-03-21      |
+| 272611 | Jarrett      | 2015-03-10      |
+| 272787 | Carlson      | 2015-02-08      |
+| 276381 | Collins      | 2015-03-10      |
+| 282716 | Biederbecke  | 2014-11-23      |
+| 287261 | Biederbecke  | No orders       |
+| 290298 | Swift        | 2015-03-28      |
+| 296598 | Collins      | 2014-09-20      |
+| 299099 | Sam          | 2015-02-03      |
++--------+--------------+-----------------+
+37 rows in set (0.01 sec)
+
+--------------
+/*  TASK 08 */
+select CU.cust_id, CU.cust_name_last
+from a_bkorders.customers CU
+join a_bkorders.order_headers OH using (cust_id)
+join a_bkorders.order_details OD using (order_id)
+join a_bkinfo.book_topics BT using (book_id)
+where BT.topic_id IN (
+  select TP.topic_id
+  from a_bkinfo.book_topics TP
+  where TP.topic_id in ('SQL') and TP.book_id not in (1142)
+)
+group by CU.cust_id
+having sum(quantity * order_price) > 500
+--------------
+
++---------+----------------+
+| cust_id | cust_name_last |
++---------+----------------+
+|  200368 | Blake          |
+|  211483 | Carroll        |
+|  212921 | Books on Tap   |
+|  217796 | Anders         |
+|  218709 | Bonnard        |
+|  222477 | Rossetti       |
+|  224038 | Austin         |
+|  227105 | Kafka          |
+|  228175 | Cardin         |
+|  234138 | Keats          |
+|  234709 | Brahms         |
+|  261502 | Hawthorne      |
+|  263119 | Jones          |
+|  267780 | Shelly         |
+|  272787 | Carlson        |
+|  290298 | Swift          |
++---------+----------------+
+16 rows in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

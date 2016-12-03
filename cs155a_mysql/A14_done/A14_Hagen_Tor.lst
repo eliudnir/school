@@ -1,0 +1,277 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_testbed
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+set SQL_SAFE_UPDATES = 0
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-04-27
+     version(): 10.0.17-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+drop table if exists a_testbed.SmallAnimals
+--------------
+
+Query OK, 0 rows affected (0.05 sec)
+
+--------------
+create table a_testbed.SmallAnimals as
+  select AN.cl_id as CLID,
+  AN.an_id as ANID,
+  substring(AN.an_name, 1, 10) as ANNAME,
+  if(AN.an_type in ('hamster', 'capybara', 'porcupine', 'dormouse'), 'Rodent', 'Reptile') as ANTYPE,
+  date(extbl.exdate) as RECENTEXAMDATE,
+  extbl.exfee as TOTALFEES
+  from a_vets.vt_animals AN
+  left join (
+    select EH.an_id, max(EH.ex_date) as exdate, sum(ED.ex_fee) as exfee
+    from a_vets.vt_exam_headers EH
+    join a_vets.vt_exam_details ED using (ex_id)
+    group by EH.an_id
+  ) extbl using (an_id)
+  where AN.an_type in ('hamster', 'capybara', 'porcupine', 'dormouse')
+  or AN.an_type in ('snake', 'chelonian', 'crocodilian', 'lizard')
+--------------
+
+Query OK, 14 rows affected (0.13 sec)
+Records: 14  Duplicates: 0  Warnings: 0
+
+--------------
+select * from a_testbed.SmallAnimals
+--------------
+
++------+-------+-----------+---------+----------------+-----------+
+| CLID | ANID  | ANNAME    | ANTYPE  | RECENTEXAMDATE | TOTALFEES |
++------+-------+-----------+---------+----------------+-----------+
+| 4534 | 11015 | Kenny     | Reptile | NULL           |      NULL |
+| 3560 | 12038 | Gutsy     | Rodent  | NULL           |      NULL |
+| 5699 | 15001 | Big Mike  | Reptile | 2015-01-31     |    265.00 |
+| 5699 | 15002 | George    | Reptile | 2015-01-08     |    130.00 |
+|  411 | 15401 | Pinkie    | Reptile | 2014-11-06     |    105.00 |
+| 1825 | 16002 | Fritz     | Rodent  | 2015-02-25     |    419.00 |
+| 5699 | 17002 | Fritzchen | Rodent  | 2014-10-10     |    200.50 |
+| 5699 | 17025 | 25        | Reptile | 2015-02-25     |    260.00 |
+| 7152 | 17026 | 3P#_26    | Reptile | 2015-01-15     |    644.00 |
+| 7152 | 17027 | 3P#_25    | Reptile | 2014-12-27     |    100.00 |
+| 5699 | 21004 | Gutsy     | Reptile | NULL           |      NULL |
+| 1825 | 21005 | Koshka    | Rodent  | 2014-12-31     |    275.00 |
+| 1825 | 21006 | Koshka    | Rodent  | NULL           |      NULL |
+| 1852 | 21007 | NULL      | Reptile | NULL           |      NULL |
++------+-------+-----------+---------+----------------+-----------+
+14 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+alter table a_testbed.SmallAnimals add EXAMSTATUS varchar(15)
+--------------
+
+Query OK, 0 rows affected (0.13 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+--------------
+update a_testbed.SmallAnimals
+set EXAMSTATUS =
+case
+  when RECENTEXAMDATE > date_sub(current_date(), interval 9 month) then "current"
+  when RECENTEXAMDATE > date_sub(current_date(), interval 12 month) then "send notice"
+  when RECENTEXAMDATE < date_sub(current_date(), interval 12 month) then "send 2nd notice"
+  else "no data-call"
+end
+--------------
+
+Query OK, 14 rows affected (0.02 sec)
+Rows matched: 14  Changed: 14  Warnings: 0
+
+--------------
+select CLID, ANID, ANNAME, ANTYPE, RECENTEXAMDATE, TOTALFEES, EXAMSTATUS
+from a_testbed.SmallAnimals
+--------------
+
++------+-------+-----------+---------+----------------+-----------+--------------+
+| CLID | ANID  | ANNAME    | ANTYPE  | RECENTEXAMDATE | TOTALFEES | EXAMSTATUS   |
++------+-------+-----------+---------+----------------+-----------+--------------+
+| 4534 | 11015 | Kenny     | Reptile | NULL           |      NULL | no data-call |
+| 3560 | 12038 | Gutsy     | Rodent  | NULL           |      NULL | no data-call |
+| 5699 | 15001 | Big Mike  | Reptile | 2015-01-31     |    265.00 | current      |
+| 5699 | 15002 | George    | Reptile | 2015-01-08     |    130.00 | current      |
+|  411 | 15401 | Pinkie    | Reptile | 2014-11-06     |    105.00 | current      |
+| 1825 | 16002 | Fritz     | Rodent  | 2015-02-25     |    419.00 | current      |
+| 5699 | 17002 | Fritzchen | Rodent  | 2014-10-10     |    200.50 | current      |
+| 5699 | 17025 | 25        | Reptile | 2015-02-25     |    260.00 | current      |
+| 7152 | 17026 | 3P#_26    | Reptile | 2015-01-15     |    644.00 | current      |
+| 7152 | 17027 | 3P#_25    | Reptile | 2014-12-27     |    100.00 | current      |
+| 5699 | 21004 | Gutsy     | Reptile | NULL           |      NULL | no data-call |
+| 1825 | 21005 | Koshka    | Rodent  | 2014-12-31     |    275.00 | current      |
+| 1825 | 21006 | Koshka    | Rodent  | NULL           |      NULL | no data-call |
+| 1852 | 21007 | NULL      | Reptile | NULL           |      NULL | no data-call |
++------+-------+-----------+---------+----------------+-----------+--------------+
+14 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+drop view if exists a_testbed.bk_MnthSales
+--------------
+
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+Note (Code 1051): Unknown table 'a_testbed.bk_MnthSales'
+--------------
+create view a_testbed.bk_MnthSales as (
+  select OD.book_id as ID, (
+    select BO.title
+    from a_bkinfo.books BO
+    where OD.book_id = BO.book_id
+  ) as title,
+  extract(year from OH.order_date) as YR,
+  extract(month from OH.order_date) as MNTH,
+  sum(OD.order_price * OD.quantity) as MnthSales
+  from a_bkorders.order_headers OH
+  join a_bkorders.order_details OD using (order_id)
+  group by OD.book_id,
+  extract(year from OH.order_date),
+  extract(month from OH.order_date)
+  order by OD.book_id, YR, MNTH
+)
+--------------
+
+Query OK, 0 rows affected (0.01 sec)
+
+--------------
+/*  TASK 04 */
+select bkMS.ID, bkMS.title, bkMS.YR, bkMS.MNTH, bkMS.MnthSales
+from a_testbed.bk_MnthSales bkMS
+where bkMS.MnthSales >= (
+  select max(mxMS.MnthSales)
+  from a_testbed.bk_MnthSales mxMS
+  where mxMS.YR = 2014
+  and mxMS.MNTH = 8
+)
+and bkMS.YR = 2014
+and bkMS.MNTH = 8
+--------------
+
++------+--------------------------------+------+------+-----------+
+| ID   | title                          | YR   | MNTH | MnthSales |
++------+--------------------------------+------+------+-----------+
+| 1401 | Visual Studio Tools for Office | 2014 |    8 |  19958.00 |
++------+--------------------------------+------+------+-----------+
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+insert into a_bkorders.order_headers (order_id, order_date, cust_id) values (999990, '2014-08-13', 234138)
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+insert into a_bkorders.order_headers (order_id, order_date, cust_id) values (999991, '2014-08-14', 200368)
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+insert into a_bkorders.order_details (order_id, order_line, book_id, quantity, order_price) values (999990, 1, 1108, 1, 3398)
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+insert into a_bkorders.order_details (order_id, order_line, book_id, quantity, order_price) values (999991, 1, 1128, 1, 6451.85)
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+insert into a_bkorders.order_details (order_id, order_line, book_id, quantity, order_price) values (999991, 2, 1128, 1, 9500)
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+select bkMS.ID, bkMS.title, bkMS.YR, bkMS.MNTH, bkMS.MnthSales
+from a_testbed.bk_MnthSales bkMS
+where bkMS.MnthSales >= (
+  select max(mxMS.MnthSales)
+  from a_testbed.bk_MnthSales mxMS
+  where mxMS.YR = 2014
+  and mxMS.MNTH = 8
+)
+and bkMS.YR = 2014
+and bkMS.MNTH = 8
+--------------
+
++------+----------------------------------------+------+------+-----------+
+| ID   | title                                  | YR   | MNTH | MnthSales |
++------+----------------------------------------+------+------+-----------+
+| 1108 | Database Systems                       | 2014 |    8 |  19958.00 |
+| 1128 | Temporal Data and the Relational Model | 2014 |    8 |  19958.00 |
+| 1401 | Visual Studio Tools for Office         | 2014 |    8 |  19958.00 |
++------+----------------------------------------+------+------+-----------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 06 */
+delete
+from a_bkorders.order_details
+where order_id = 999990
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+delete
+from a_bkorders.order_headers
+where order_id = 999990
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+delete
+from a_bkorders.order_details
+where order_id = 999991
+--------------
+
+Query OK, 2 rows affected (0.01 sec)
+
+--------------
+delete
+from a_bkorders.order_headers
+where order_id = 999991
+--------------
+
+Query OK, 1 row affected (0.01 sec)
+
+--------------
+/*  TASK 07 */
+
+/*  TASK 08 */
+
+/*  TASK 09 */
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

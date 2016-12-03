@@ -1,0 +1,231 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use a_plants
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): eliudnir@localhost
+current_date(): 2015-03-04
+     version(): 10.0.16-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select PL.plant_id, PL.common_name, PL.on_hand, PL.list_price,
+round(PL.on_hand * PL.list_price, -2) as InventoryCost
+from a_plants.plants PL
+where PL.discontinued_date is not null
+and PL.on_hand > 0
+--------------
+
++----------+--------------------+---------+------------+---------------+
+| plant_id | common_name        | on_hand | list_price | InventoryCost |
++----------+--------------------+---------+------------+---------------+
+|     1003 | Anemone            |     150 |       8.25 |          1200 |
+|     2020 | Porcupine Thistle  |     150 |      25.00 |          3800 |
+|     2022 | Echinoderm Thistle |     450 |      25.00 |         11300 |
++----------+--------------------+---------+------------+---------------+
+3 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+set @tax_rate := 0.06
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select OD.order_id, OD.plant_id, OD.price_per, OD.quantity,
+OD.price_per * OD.quantity as "extended cost",
+truncate(ceiling((OD.price_per * OD.quantity)*100)/100 * @tax_rate, 2) as "tax amount"
+from a_plants.order_details OD
+--------------
+
++----------+----------+-----------+----------+---------------+------------+
+| order_id | plant_id | price_per | quantity | extended cost | tax amount |
++----------+----------+-----------+----------+---------------+------------+
+|     5101 |     1001 |     12.50 |        1 |         12.50 |       0.75 |
+|     5101 |     2022 |     50.00 |      111 |       5550.00 |     333.00 |
+|     5102 |     1002 |     15.00 |      100 |       1500.00 |      90.00 |
+|     5102 |     1004 |     14.50 |      200 |       2900.00 |     174.00 |
+|     5102 |     1009 |      5.20 |      200 |       1040.00 |      62.40 |
+|     5103 |     1004 |     15.50 |       20 |        310.00 |      18.60 |
+|     5103 |     2023 |      5.50 |       20 |        110.00 |       6.60 |
+|     5104 |     1004 |     17.50 |       15 |        262.50 |      15.75 |
+|     5104 |     1009 |     50.00 |        3 |        150.00 |       9.00 |
+|     5104 |     1010 |      2.75 |       10 |         27.50 |       1.65 |
+|     5104 |     2022 |     37.50 |      111 |       4162.50 |     249.75 |
+|     5104 |     2023 |      5.50 |       10 |         55.00 |       3.30 |
+|     5105 |     1004 |      5.25 |      250 |       1312.50 |      78.75 |
+|     5105 |     1009 |      9.38 |       50 |        469.00 |      28.14 |
+|     5105 |     1010 |      2.75 |       25 |         68.75 |       4.12 |
+|     5202 |     1001 |      NULL |        1 |          NULL |       NULL |
+|     5203 |     1001 |     12.50 |       10 |        125.00 |       7.50 |
+|     5204 |     1001 |     12.50 |        1 |         12.50 |       0.75 |
+|     5245 |     1004 |     15.50 |       25 |        387.50 |      23.25 |
++----------+----------+-----------+----------+---------------+------------+
+19 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+set @state_abbreviations := 'IL,IN,IA,KS,MI,MN,MO,NE,ND,OH,SD,WI'
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select OH.cust_id, CU.cust_name_last, OH.order_date
+from a_plants.order_headers OH
+join a_plants.customers CU using (cust_id)
+where find_in_set(CU.cust_state, @state_abbreviations) = 0
+--------------
+
++---------+----------------+------------+
+| cust_id | cust_name_last | order_date |
++---------+----------------+------------+
+|    3009 | Peterson       | 2015-01-31 |
+|    3009 | Peterson       | 2015-02-01 |
+|    3012 | Hawkins        | 2015-02-10 |
+|    3012 | Hawkins        | 2014-07-22 |
+|    3012 | Hawkins        | 2014-08-01 |
+|    3012 | Hawkins        | 2014-08-02 |
+|    3012 | Hawkins        | 2014-08-03 |
+|    3009 | Peterson       | 2014-09-03 |
++---------+----------------+------------+
+8 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+set @random_price := floor(rand() * 41) + 10
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+select @random_price
+--------------
+
++---------------+
+| @random_price |
++---------------+
+|            50 |
++---------------+
+1 row in set (0.00 sec)
+
+--------------
+select PL.plant_id, PL.list_price
+from a_plants.plants PL
+where PL.list_price < @random_price
+--------------
+
++----------+------------+
+| plant_id | list_price |
++----------+------------+
+|     1001 |      12.50 |
+|     1002 |      15.63 |
+|     1003 |       8.25 |
+|     1004 |      15.50 |
+|     1005 |       2.75 |
+|     1009 |       9.38 |
+|     1010 |       2.75 |
+|     2020 |      25.00 |
+|     2021 |      25.00 |
+|     2022 |      25.00 |
+|     2023 |      12.50 |
+|     2057 |       9.25 |
+|     3300 |      12.00 |
++----------+------------+
+13 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select distinct PL.plant_id, PL.common_name,
+  case
+    when length(concat(PT.genus, PT.species)) > 0 then concat_ws(" ", PT.genus, PT.species)
+  else null
+  end as Scientific_Name
+from a_plants.order_headers OH
+join a_plants.order_details OD using (order_id)
+join a_plants.plants PL using (plant_id)
+left join a_plants.plant_taxonomy PT using (plant_id)
+where substring_index(OH.order_date, "-", 2) in ('2015-01', '2015-02')
+--------------
+
++----------+------------------------+--------------------------+
+| plant_id | common_name            | Scientific_Name          |
++----------+------------------------+--------------------------+
+|     1002 | Common Buttercup       | Ranunculus acris         |
+|     1004 | Wild Wood Anemones     | Anemone nemorosa         |
+|     1009 | Cursed Crowfoot        | Ranunuculus sceleratus   |
+|     2023 | Rocky Mountain Thistle | Cirsium perplexans       |
+|     1010 | California Poppy       | Eschscholzia californica |
+|     2022 | Echinoderm Thistle     | NULL                     |
++----------+------------------------+--------------------------+
+6 rows in set (0.01 sec)
+
+--------------
+/*  TASK 06 */
+select distinct all_orders.plant_id, plant_names.common_name, plant_names.Scientific_name
+from (
+  select OD.plant_id
+    from a_plants.order_details OD
+    join a_plants.order_headers OH using (order_id)
+) all_orders
+left join (
+  select OD.plant_id
+    from a_plants.order_details OD
+    join a_plants.order_headers OH using (order_id)
+    where substring_index(OH.order_date, "-", 2) in ('2013-07', '2013-08')
+) plant_filter on all_orders.plant_id = plant_filter.plant_id
+join (
+  select PL.plant_id, PL.common_name,
+    case
+      when length(concat(PT.genus, PT.species)) > 0 then concat_ws(" ", PT.genus, PT.species)
+    else null
+        end as Scientific_Name
+    from a_plants.plants PL
+    left join a_plants.plant_taxonomy PT using (plant_id)
+) plant_names on all_orders.plant_id = plant_names.plant_id
+where plant_filter.plant_id is null
+--------------
+
++----------+------------------------+--------------------------+
+| plant_id | common_name            | Scientific_Name          |
++----------+------------------------+--------------------------+
+|     1002 | Common Buttercup       | Ranunculus acris         |
+|     1004 | Wild Wood Anemones     | Anemone nemorosa         |
+|     1009 | Cursed Crowfoot        | Ranunuculus sceleratus   |
+|     2023 | Rocky Mountain Thistle | Cirsium perplexans       |
+|     1001 | Cowslip                | Primula veris            |
+|     2022 | Echinoderm Thistle     | NULL                     |
+|     1010 | California Poppy       | Eschscholzia californica |
++----------+------------------------+--------------------------+
+7 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+
+
+/*  TASK 08 */
+
+
+/*  TASK 09 */
+
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

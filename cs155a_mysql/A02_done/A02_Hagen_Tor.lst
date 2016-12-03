@@ -1,0 +1,362 @@
+--------------
+/* Tor Hagen */
+
+    /* enable warnings! */
+
+use   a_vets
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+--------------
+/*  TASK 00 */
+select user(), current_date(), version(), @@sql_mode
+--------------
+
+*************************** 1. row ***************************
+        user(): thagen@localhost
+current_date(): 2015-01-22
+     version(): 10.0.15-MariaDB-log
+    @@sql_mode: 
+1 row in set (0.00 sec)
+
+--------------
+/*  TASK 01 */
+select an_type, an_name, an_id
+from vt_animals
+order by an_name
+--------------
+
++-----------+-----------------+-------+
+| an_type   | an_name         | an_id |
++-----------+-----------------+-------+
+| bird      | NULL            | 11025 |
+| bird      | NULL            | 11029 |
+| snake     | NULL            | 21007 |
+| lizard    | 25              | 17025 |
+| lizard    | 3P#_25          | 17027 |
+| lizard    | 3P#_26          | 17026 |
+| cat       | Adalwine        | 21314 |
+| cat       | Baldric         | 21315 |
+| chelonian | Big Mike        | 15001 |
+| dog       | Burgess         | 15165 |
+| dog       | Calvin Coolidge | 21003 |
+| hedgehog  | Edger           | 21002 |
+| cat       | Etta            | 21316 |
+| porcupine | Fritz           | 16002 |
+| porcupine | Fritzchen       | 17002 |
+| chelonian | George          | 15002 |
+| snake     | Gutsy           | 21004 |
+| cat       | Gutsy           | 10002 |
+| porcupine | Gutsy           | 12038 |
+| snake     | Kenny           | 11015 |
+| dormouse  | Koshka          | 21005 |
+| hamster   | Koshka          | 21006 |
+| cat       | Manfried        | 21317 |
+| olinguito | Morris          | 21320 |
+| olinguito | Morton          | 21321 |
+| bird      | Mr Peanut       | 12035 |
+| cat       | Napper          | 16004 |
+| lizard    | Pinkie          | 15401 |
+| dog       | Pinkie          | 19845 |
+| cat       | Ursula          | 16003 |
+| cat       | Waldrom         | 21318 |
+| hedgehog  | Yoggie          | 21001 |
++-----------+-----------------+-------+
+32 rows in set (0.00 sec)
+
+--------------
+/*  TASK 02 */
+select ex_date as 'Exam Date', an_id as 'Animal ID'
+from vt_exam_headers
+order by ex_date desc
+--------------
+
++---------------------+-----------+
+| Exam Date           | Animal ID |
++---------------------+-----------+
+| 2015-02-25 14:30:00 |     16002 |
+| 2015-02-25 10:45:00 |     17025 |
+| 2015-02-17 10:45:00 |     16002 |
+| 2015-02-10 09:15:00 |     16002 |
+| 2015-01-31 09:00:00 |     15001 |
+| 2015-01-22 09:00:00 |     15001 |
+| 2015-01-15 10:45:00 |     17026 |
+| 2015-01-09 16:30:00 |     12035 |
+| 2015-01-08 15:30:00 |     16002 |
+| 2015-01-08 13:00:00 |     15002 |
+| 2015-01-02 13:00:00 |     15001 |
+| 2015-01-01 16:30:00 |     16003 |
+| 2014-12-31 13:00:00 |     21005 |
+| 2014-12-30 14:30:00 |     17025 |
+| 2014-12-29 14:00:00 |     17025 |
+| 2014-12-27 10:45:00 |     17027 |
+| 2014-12-26 09:30:00 |     21003 |
+| 2014-12-23 12:15:00 |     16002 |
+| 2014-12-23 08:30:00 |     16003 |
+| 2014-12-01 16:30:00 |     16003 |
+| 2014-11-23 10:30:00 |     21001 |
+| 2014-11-22 09:00:00 |     19845 |
+| 2014-11-10 10:45:00 |     15002 |
+| 2014-11-10 10:30:00 |     16003 |
+| 2014-11-06 10:45:00 |     17025 |
+| 2014-11-06 10:30:00 |     17027 |
+| 2014-11-06 10:30:00 |     15401 |
+| 2014-11-03 14:30:00 |     16002 |
+| 2014-10-24 10:45:00 |     17027 |
+| 2014-10-22 10:45:00 |     17026 |
+| 2014-10-10 09:15:00 |     17002 |
+| 2014-10-03 14:30:00 |     17025 |
++---------------------+-----------+
+32 rows in set (0.00 sec)
+
+--------------
+/*  TASK 03 */
+select distinct an_type
+from vt_animals
+--------------
+
++-----------+
+| an_type   |
++-----------+
+| bird      |
+| cat       |
+| chelonian |
+| dog       |
+| dormouse  |
+| hamster   |
+| hedgehog  |
+| lizard    |
+| olinguito |
+| porcupine |
+| snake     |
++-----------+
+11 rows in set (0.00 sec)
+
+--------------
+/*  TASK 04 */
+select ex_id, ex_fee
+from vt_exam_details
+order by ex_id, ex_fee
+--------------
+
++-------+--------+
+| ex_id | ex_fee |
++-------+--------+
+|  3001 |  25.00 |
+|  3010 |  25.00 |
+|  3010 | 535.00 |
+|  3104 |  47.00 |
+|  3104 |  75.00 |
+|  3105 |  50.50 |
+|  3105 | 150.00 |
+|  3202 |  20.00 |
+|  3203 |  20.00 |
+|  3282 |  25.25 |
+|  3282 |  50.00 |
+|  3282 |  60.00 |
+|  3288 |  25.00 |
+|  3288 |  30.00 |
+|  3288 |  45.00 |
+|  3304 |  25.00 |
+|  3304 |  25.00 |
+|  3306 |  25.00 |
+|  3306 |  30.00 |
+|  3306 |  45.00 |
+|  3321 |   0.00 |
+|  3322 |  29.50 |
+|  3323 |  20.00 |
+|  3323 |  45.00 |
+|  3324 |  25.00 |
+|  3324 |  30.00 |
+|  3324 |  45.00 |
+|  3325 |  25.00 |
+|  3325 |  59.00 |
+|  3390 |  55.00 |
+|  3390 |  70.00 |
+|  3392 |  21.00 |
+|  3392 |  30.00 |
+|  3392 |  45.00 |
+|  3393 |   0.00 |
+|  3393 |  29.50 |
+|  3409 |  25.00 |
+|  3411 |  20.00 |
+|  3412 |  20.00 |
+|  3413 |   5.00 |
+|  3420 |  80.00 |
+|  3486 | 275.00 |
+|  3494 |  30.00 |
+|  3513 |  30.00 |
+|  3513 |  75.00 |
+|  3514 |  15.00 |
+|  3514 |  25.00 |
+|  3514 |  30.00 |
+|  3552 |   2.25 |
+|  3612 |  25.91 |
+|  3612 |  40.00 |
+|  3612 |  47.00 |
+|  3612 |  57.00 |
+|  3612 |  78.00 |
+|  3612 |  78.30 |
+|  3612 | 109.00 |
+|  3612 | 155.00 |
+|  3612 | 222.00 |
+|  4101 |  60.00 |
+|  4101 |  75.00 |
+|  4102 |  60.00 |
+|  4103 | 275.00 |
++-------+--------+
+62 rows in set (0.00 sec)
+
+--------------
+/*  TASK 05 */
+select srv_type, srv_desc
+from vt_services
+order by srv_type, srv_list_price
+--------------
+
++--------------+--------------------------------------------+
+| srv_type     | srv_desc                                   |
++--------------+--------------------------------------------+
+| medicine     | Third Feline PCR                           |
+| medicine     | Second Feline PCR                          |
+| medicine     | Scaly Mite Powder                          |
+| medicine     | Buprenex oral drops 1 ml                   |
+| medicine     | Preds-liver                                |
+| medicine     | Preds-chicken                              |
+| medicine     | First Feline PCR                           |
+| medicine     | Vitamin E- Concentrated                    |
+| medicine     | Feline PCR Series                          |
+| medicine     | antibiotics                                |
+| office visit | Followup Exam-Small Mammal                 |
+| office visit | Followup Exam-Reptile                      |
+| office visit | Followup Exam-Bird                         |
+| office visit | Followup Exam-Canine                       |
+| office visit | Followup Exam-Feline                       |
+| office visit | Routine Exam-Reptile                       |
+| office visit | Routine Exam-Small Mammal                  |
+| office visit | Routine Exam-Canine                        |
+| office visit | Routine Exam-Feline                        |
+| treatment    | Hazardous Materials Disposal               |
+| treatment    | Intestinal Parasite Screen                 |
+| treatment    | Tooth extraction Level 2                   |
+| treatment    | Dental Cleaning-Feline                     |
+| treatment    | Hospital stay- short                       |
+| treatment    | Dental Cleaning-Canine                     |
+| treatment    | Tooth extraction Level 3                   |
+| treatment    | Routine Exam-Bird                          |
+| treatment    | Feline Dental X_ray                        |
+| treatment    | Dental Cleaning-Other                      |
+| treatment    | Dental Scaling                             |
+| treatment    | CBC and scan                               |
+| treatment    | General Anethesia 1 hour                   |
+| treatment    | Feline Behaviour Modification Consultation |
+| treatment    | Tooth extraction Level 1                   |
++--------------+--------------------------------------------+
+34 rows in set (0.01 sec)
+
+--------------
+/*  TASK 06 */
+select distinct cl_state, cl_city
+from vt_clients
+order by cl_state, cl_city
+--------------
+
++----------+---------------+
+| cl_state | cl_city       |
++----------+---------------+
+| AR       | Big Rock      |
+| CA       | San Diego     |
+| CA       | San Francisco |
+| IL       | Springfield   |
+| MA       | Boston        |
+| MA       | Spring Valley |
+| MO       | Springfield   |
+| ND       | Big Rock      |
+| NM       | San Francisco |
+| NY       | New York      |
+| OH       | Dayton        |
+| OH       | Springfield   |
++----------+---------------+
+12 rows in set (0.00 sec)
+
+--------------
+/*  TASK 07 */
+select stf_job_title as 'Job Desc',
+stf_name_first as 'First Name',
+stf_name_last as 'Last Name'
+from vt_staff
+order by stf_name_last, stf_name_first
+--------------
+
++-----------+------------+------------+
+| Job Desc  | First Name | Last Name  |
++-----------+------------+------------+
+| vet       | Eliza      | Dolittle   |
+| vet assnt | Dexter     | Gordon     |
+| kennel    | Pat        | Halvers    |
+| vet assnt | Sandy      | Helfen     |
+| vet assnt | Sandy      | Helfen     |
+| clerical  | Shirley    | Horn       |
+| vet       | Rhoda      | Wabich     |
+| vet       | Marcin     | Wasilewski |
+| vet assnt | Brenda     | Webster    |
+| vet       | Bridgette  | Wilkommen  |
++-----------+------------+------------+
+10 rows in set (0.00 sec)
+
+--------------
+/*  TASK 08 */
+select stf_id, an_id, ex_date
+from vt_exam_headers
+order by stf_id, ex_date desc
+--------------
+
++--------+-------+---------------------+
+| stf_id | an_id | ex_date             |
++--------+-------+---------------------+
+|     15 | 15002 | 2015-01-08 13:00:00 |
+|     15 | 15001 | 2015-01-02 13:00:00 |
+|     15 | 16003 | 2015-01-01 16:30:00 |
+|     15 | 21005 | 2014-12-31 13:00:00 |
+|     15 | 21003 | 2014-12-26 09:30:00 |
+|     15 | 16003 | 2014-12-23 08:30:00 |
+|     15 | 16003 | 2014-12-01 16:30:00 |
+|     15 | 21001 | 2014-11-23 10:30:00 |
+|     15 | 19845 | 2014-11-22 09:00:00 |
+|     15 | 16003 | 2014-11-10 10:30:00 |
+|     15 | 15401 | 2014-11-06 10:30:00 |
+|     15 | 17027 | 2014-11-06 10:30:00 |
+|     25 | 15001 | 2015-01-31 09:00:00 |
+|     25 | 15001 | 2015-01-22 09:00:00 |
+|     29 | 16002 | 2015-02-25 14:30:00 |
+|     29 | 17025 | 2015-02-25 10:45:00 |
+|     29 | 16002 | 2015-02-17 10:45:00 |
+|     29 | 16002 | 2015-02-10 09:15:00 |
+|     29 | 17026 | 2015-01-15 10:45:00 |
+|     29 | 17025 | 2014-12-30 14:30:00 |
+|     29 | 17025 | 2014-12-29 14:00:00 |
+|     29 | 17027 | 2014-12-27 10:45:00 |
+|     29 | 16002 | 2014-12-23 12:15:00 |
+|     29 | 15002 | 2014-11-10 10:45:00 |
+|     29 | 17025 | 2014-11-06 10:45:00 |
+|     29 | 16002 | 2014-11-03 14:30:00 |
+|     29 | 17027 | 2014-10-24 10:45:00 |
+|     29 | 17026 | 2014-10-22 10:45:00 |
+|     29 | 17002 | 2014-10-10 09:15:00 |
+|     29 | 17025 | 2014-10-03 14:30:00 |
+|     38 | 12035 | 2015-01-09 16:30:00 |
+|     38 | 16002 | 2015-01-08 15:30:00 |
++--------+-------+---------------------+
+32 rows in set (0.00 sec)
+
+--------------
+/*  TASK 09 */
+
+
+/*  TASK 10 */
+--------------
+
+Query OK, 0 rows affected (0.00 sec)
+
+Bye

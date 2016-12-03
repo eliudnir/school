@@ -1,0 +1,60 @@
+#!/bin/bash
+
+#   Author: 			        Tor Hagen
+#   Class:	       		    CS160B
+#   Date:   	       		  Sat Nov. 21 2015
+#   Instructor:	    		  Peter Wood
+#   NoF:        	   			head[n]
+#		Inputs/Args: 	 
+#													
+#		Outputs:
+#
+#		Restrictions: 				No getopts
+
+# First we store a standard usage error output to a varible
+usageerror="usage: head1 inputfile
+inputfile: the input file to 'head'"
+
+# standard test to see how many arguments the comnand has supplied 
+# exit if we don't get what we want here
+if [ "$#" -ne 1 ]
+then 
+	echo "$usageerror"
+	exit 1
+fi
+
+# Here we test to see that the first argument is in fact a file on the system
+# and that we we can read from said file
+if [ ! -r $1 ] || [ ! -e $1 ]
+then
+	echo "Please make sure $1 is a file and that you have read access to it!"
+	exit 1
+fi
+ 
+# by this point we're able to store argument one to the execution of this
+# script to the variable infile and be sure it's a file 
+# we also make a counter that we will use in the read loop 
+infile=$1
+counter=1
+
+# Here we read the $infile line by line into the variable $line and echo each
+# line out to the user. The [[ -n $line ]] test ensures that the we don't skip the 
+# last line in the $infile since read gives nonzero exit as soon as it hits end
+# of file.
+while read line || [[ -n $line ]];
+do
+	# we break out of the loop if our counter is decreased so as to be less than
+	# or equal to 0 (counts from 0 to 10 by +1 step in the while loop)
+	if [ "$counter" -gt 10 ]
+	then
+		break;
+	fi
+
+	# Then we echo (-e to enable use of special output escapes characters)  and 
+	# show the user the line number and the actual line from the file he/she 
+	# wishes to see, the counter variable is increased by 1 at the end of each loop
+	# the sed pipe translates the space between variables into 6 spaces (formatting)
+	echo "$line"
+	((counter += 1))
+done < "$infile"
+

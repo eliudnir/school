@@ -1,0 +1,55 @@
+//
+//  Board.h
+//  Battleship
+//	
+//	I opted to place rules, randomization and logic into the game board class
+//	since all the interfaces for that was practically done... 
+
+#ifndef BOARD_H
+#define BOARD_H
+
+#include <iostream>
+// I will use a vector to hold the ships in play
+#include <vector> 
+#include "Ship.h"
+
+class Board
+{
+private:
+	// As our representation output is just chars, a 2D array of type char will do 
+	char board[10][10];
+
+	// This is our private state variable we will trip to end the game in the main loop
+	bool gameOverState;
+
+	// the vector with our game ships, given a type and a name 
+	std::vector<Ship> gameShips;
+
+	// we have a private helper function that is called by the public -> getUserInput() method // IF getUserInput() got valid stuff, if not it will loop over and ask for values that are 
+	// good
+	void fireAtTarget(int x, int y);
+	
+public:
+	// A constructor we will need, this will basically do everything that has to do with 
+	// setting up the board, randomizing the ships etc. 
+	Board();
+
+	// This is a function to print out our board map
+	void printBoard();
+
+	// This method collects the players X Y input values (validates them), and then
+	// calls on the private fireAtTarget() if the values are valid
+	void getUserInput(); 
+
+	// A helper test that checks if there are any ships left in the game
+	// it will stop the game if not
+	void shipsLeft();
+	
+	// This is what we will use in the main() function to keep our game going until
+	// gameOverState is flipped to true by shipsLeft() if that comes up showing that 
+	// the player has killed all the ships
+	bool gameOver() { return gameOverState; };
+    
+};
+
+#endif

@@ -1,0 +1,146 @@
+#!/bin/bash
+
+#	Tor Hagen
+# CS160B
+#	ping wrapper utility homework 4
+# nof: myping
+#
+# inputs:  flag for, and number of packet to send
+#					 flag for, and list of hosts
+#
+# outputs: ping statistic and info for all hosts supplied at argument
+#	
+#	note: no temporary files
+# 			tested for "multi host" on arch linux x86_64 Linux 4.2.3-1-ARCH
+#       tested for "multi host" on hills Red Hat 4.4.7-16 linux
+
+# variables holding runtime and state data for the script to function
+hostList=[]				# list of hosts we're pinging
+resultList=[]			# the result of said ping to each host, also list
+numPackets=0			# the number of packets to send to each host ping
+hostIndex=0				#	counter index variable for hosts
+pingResult=""			# temp variable to hold results from pinging
+pingCounter=0 		# counter variable for pings on hosts
+nCount=0					# temp counter for output loop
+packetLoss="" 		# variable to hold % of packets lost
+pingStat=""				# variable to hold ping stat or no host / can't reach
+tPackets=0				# variable to temporary hold numPackets = 0 in output loop if we need
+successPings=""		# string to hold successful ping info output (concatenated)
+failurePings=""		# string to hold failure ping info output (concatenated)
+
+# set explicit path, no need for export as path variable is previosuly set and defined
+PATH="/bin:/usr/bin"
+
+# This is our Usage Error function - prints why it didn't work as well
+# It prints out a message indicating how to use and example of how to use the wrapper
+# after the error is printed the function exits the program back to the prompt
+usageError() {
+	# if statements decide what error to show the user
+	if [[ "$1" = notEnoughParams ]]; 
+	then
+		errAppend="Not enough parameters supplied!"
+	elif [[ "$1" = nPackets ]]; 
+	then
+		errAppend="Make sure -p is present and followed by a number of packets!"
+	elif [[ "$1" = hostFlag ]]
+	then
+		errAppend="Ensure that the host flag (-h) is present and followed by host(s)!"
+	fi
+
+	# generic print and exit after making decision about what went wrong above
+	echo -e "Error! $errAppend"
+	echo -e "Usage: myping -p npackets -h host1 [host2 host3 ... ]"
+	echo -e "[host2 host3 ...] = optional values" 
+	echo -e "Example:"
+	echo -e "myping -p 3 -h fog.ccsf.edu yahoo.com mit.edu"
+	exit 1
+}
+
+# First we test for number of arguments supplied and trigger our error&exit 
+# function with the correct param if arguments are not greater than or equal to 4
+if ! [[ "$#" -ge 4 ]]
+then
+	usageError notEnoughParams
+fi
+
+# Then we go through and make sure our arguments are what we want them to be
+# starting with -p and the digit(s) (integer) that should follow it
+if ! [[ "$1" = "-p" ]] || ! [[ "$2" =~ ^[0-9]+$ ]]
+then
+	usageError nPackets
+fi
+
+# then lastly we make sure the host flag is set 
+if ! [[ "$3" = "-h" ]]; 
+then
+	usageError hostFlag
+fi
+
+# Then we store however many packets the user wants to send as an argument to our variable
+# and shift the input paramteres by 3 so we only have the hosts to deal with
+numPackets=$2
+shift 3
+
+# Here we loop over the remaining arguments and store them to an array list that
+# we will use as our list of hosts 
+for host in "$@"
+do 
+	hostList[hostIndex]=$host
+	((hostIndex += 1))
+done
+
+# Here we send pings to each entry in the host list and store the outputs of each 
+# for processing after we're done pinging
+while ! [[ $pingCounter -eq $hostIndex ]]; 
+do
+	pingResult="$(ping -c $numPackets ${hostList[pingCounter]} 2>&1)"
+	resultList[pingCounter]="$pingResult"
+	((pingCounter += 1))
+done
+
+# Now we loop over our result list from the ping session
+for i in "${resultList[@]}"
+do
+	# Here we re-declare and/or clear out the packetLoss and pingStat variables to make sure we don't print crud 
+	# from last iteration on current run through the loop
+	packetLoss=""
+	pingStat=""
+	tPackets=$numPackets
+
+	# then we set the pingStat variable based on this if/else - we use grep to capture the stats in the
+	# else block below, we also set tPackets to 0 if the host is unknown as we didn't actually ping anyone
+	# (e.g. we didn't send any packets in that case)
+	if [[ "$i" == *"unknown host"* ]]; 
+	then
+		pingStat="unknown host"
+		tPackets=0
+	else
+		pingStat="$(echo -e "${resultList[nCount]}" | grep -E -o '([0-9]+\.[0-9]+\/){3}' | sed '$s/.$//')"
+	fi
+	
+	# The packetLoss variable is set here using grep
+	packetLoss="$(echo -e "${resultList[nCount]}" | grep -E -o '[0-9]+% packet loss')"
+
+	# if we get any 100% packet loss cases we set their pingStat to non-responding as it would be
+	# null anyway
+	if [[ "$packetLoss" = "100% packet loss" ]]; 
+	then
+		pingStat="not responding"
+	fi
+
+	# Then we split the output into two strings based on the result of the ping to the host
+	# and add to either string, concatenating on each time in the loop
+	if [[ "$pingStat" = "unknown host" || "$pingStat" = "not responding" ]]; 
+	then
+		failurePings="$failurePings$(printf '%-25s %-3d %-18s %-20s' "${hostList[nCount]}" "$tPackets" "$packetLoss" "$pingStat")\n"
+	else
+		successPings="$successPings$(printf '%-25s %-3d %-18s %-20s' "${hostList[nCount]}" "$tPackets" "$packetLoss" "$pingStat")\n"
+	fi
+
+	((nCount += 1))
+done
+
+# then we echo out the successPings - sorted 
+# followed by the failures - sorted by 0-100% failure rate putting non-responds last
+# both outputs are trimmed post sort by sed
+echo -e "$successPings" | sort -n -t/ -k2,2 | sed '/^$/d' ; echo -e "$failurePings" | sort -k4,4 | sed '/^$/d'
